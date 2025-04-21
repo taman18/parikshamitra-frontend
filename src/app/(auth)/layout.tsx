@@ -6,11 +6,10 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-    console.log("auth layout")
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* <title>Admin Dashboard</title> */}
+        <title>Admin Dashboard</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body>
