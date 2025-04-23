@@ -11,7 +11,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <head>
         <title>Admin Dashboard</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />

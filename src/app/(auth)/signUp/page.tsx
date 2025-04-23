@@ -1,10 +1,9 @@
-import { SignUpForm } from '@/components/ui/auth/signUpForm'
-import React from 'react'
+import { SignUpForm } from "@/components/ui/auth/signUpForm";
 
-const SignUp = () => {
+export default function SignUpPage() {
   return (
-    <SignUpForm />
+    <div className="flex min-h-screen items-center justify-center px-4">
+      <SignUpForm />
+    </div>
   )
 }
-
-export default SignUp
