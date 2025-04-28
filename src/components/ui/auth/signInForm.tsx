@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Github, Mail } from "lucide-react"
 import { useState } from "react"
 import { signIn } from "next-auth/react"
+import Link from "next/link"
 
 
 export function SignInForm() {
@@ -72,6 +73,8 @@ export function SignInForm() {
         <Button type="submit" className="w-full">
           Sign In
         </Button>
+        <p>Don`t you have an account?</p>
+        <Link href="/signUp">Sign Up</Link>
       </form>
     </div>
   )

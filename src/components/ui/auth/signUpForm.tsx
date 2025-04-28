@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { Github, Mail, User, Lock, Globe } from "lucide-react"
 import { signIn } from "next-auth/react"
+import Link from "next/link"
 
 export function SignUpForm() {
   const [form, setForm] = useState({ userName: "", email: "", password: "" })
@@ -96,6 +97,7 @@ export function SignUpForm() {
         >
           <Github className="mr-2 h-4 w-4" /> GitHub
         </Button>
+        <p>Already have an account? <Link href="/signIn" className="underline">Sign in</Link></p>
       </div>
     </div>
   )
