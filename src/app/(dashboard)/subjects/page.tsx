@@ -15,6 +15,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Edit, Trash2, Plus } from "lucide-react"
+import { useDispatch } from "react-redux"
+import { addSubject } from "@/lib/features/subject"
+import { AppDispatch } from "@/lib/store"
 // import { useToast } from "@/components/ui/use-toast"
 
 interface Subject {
@@ -25,6 +28,7 @@ interface Subject {
 
 export default function SubjectsPage() {
 //   const { toast } = useToast()
+  const dispatch = useDispatch<AppDispatch>();
   const [selectedClass, setSelectedClass] = useState<string>("")
   const [subjectName, setSubjectName] = useState<string>("")
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false)
@@ -44,16 +48,13 @@ export default function SubjectsPage() {
 
   const classes = ["Class 6", "Class 7", "Class 8", "Class 9", "Class 10", "Class 11", "Class 12"]
 
-  const handleAddSubject = () => {
+  const handleAddSubject = async() => {
     if (!selectedClass || !subjectName.trim()) {
-    //   toast({
-    //     title: "Error",
-    //     description: "Please select a class and enter a subject name",
-    //     variant: "destructive",
-    //   })
+      console.log("Subject and class not selected")
       return
     }
-
+    const addedSubject = await dispatch(addSubject({classId: "68120414eec29822db26ba8c", className: selectedClass, subjectName: subjectName}));
+    console.log("addedSubject",addedSubject);
     const newSubject: Subject = {
       id: subjects.length + 1,
       name: subjectName,
@@ -63,10 +64,6 @@ export default function SubjectsPage() {
     setSubjects([...subjects, newSubject])
     setSubjectName("")
 
-    // toast({
-    //   title: "Success",
-    //   description: "Subject added successfully",
-    // })
   }
 
   const openEditDialog = (subject: Subject) => {

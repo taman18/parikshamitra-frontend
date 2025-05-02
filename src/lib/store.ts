@@ -1,12 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit'
 import userReducer from './features/user/userManagement'
 import testReducer from './features/user/testManagement'
+import subjectReducer from './features/subject'
 
 export const makeStore = () => {
   return configureStore({
     reducer: {
       user: userReducer,
-      test: testReducer
+      test: testReducer,
+      subject: subjectReducer
     },
   })
 }
