@@ -34,6 +34,7 @@ export const authOptions = {
               },
             }
           );
+
           if (res.ok) {
             const user = await res.json();
             return user.data;
@@ -69,11 +70,10 @@ export const authOptions = {
               },
             }
           );
-
           if (userInfoRes.ok) {
             const userInfo = await userInfoRes.json();
-            const fullUser = userInfo.response.data.user;
 
+            const fullUser = userInfo.response.data.user;
             token.userId = fullUser._id;
             token.email = fullUser.email;
             token.status = fullUser.status ?? "active";
@@ -82,6 +82,7 @@ export const authOptions = {
             token.averageScore = fullUser.averageScore ?? 0;
             token.createdAt = fullUser.createdAt ?? "";
             token.updatedAt = fullUser.updatedAt ?? "";
+            token.refreshToken = fullUser.refreshToken ?? "";
           } else {
             // If user not found, register a new one
             const registerRes = await fetch(
@@ -98,7 +99,6 @@ export const authOptions = {
                 }),
               }
             );
-
             if (registerRes.ok) {
               const registerInfo = await registerRes.json();
               const newUser = registerInfo.data;
@@ -130,6 +130,8 @@ export const authOptions = {
           token.image = user.image ?? "";
           token.averageScore = user.averageScore ?? 0;
           token.createdAt = user.createdAt ?? "";
+          token.refreshToken = user.refreshToken ?? "";
+          token.accessToken = user.accessToken ?? "";
           token.updatedAt = user.updatedAt ?? "";
         }
       }
@@ -144,6 +146,8 @@ export const authOptions = {
         token.averageScore = user.averageScore ?? 0;
         token.createdAt = user.createdAt ?? "";
         token.updatedAt = user.updatedAt ?? "";
+        token.accessToken = user.accessToken ?? "";
+        token.refreshToken = user.refreshToken ?? "";
       }
 
       return token;
@@ -158,6 +162,8 @@ export const authOptions = {
       session.user.createdAt = token.createdAt;
       session.user.updatedAt = token.updatedAt;
       session.user.image = token.picture;
+      session.user.accessToken = token.accessToken ?? "";
+      session.user.refreshToken = token.refreshToken ?? "";
       return session;
     },
   },
