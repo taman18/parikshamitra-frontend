@@ -10,15 +10,17 @@ import Link from "next/link"
 
 
 export function SignInForm() {
-  const [form, setForm] = useState({ username: "", password: "" })
+  const [form, setForm] = useState({ email: "", password: "" })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Sign in form submitted:", form)
+    console.log("Sign in form submitted:", form);
+    const res = await signIn('credentials', {  email: form.email, password: form.password, redirect: false });
+    console.log(res, '----')
   }
 
   return (
@@ -47,13 +49,13 @@ export function SignInForm() {
       {/* Sign In form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <Label htmlFor="username">Username</Label>
+          <Label htmlFor="email">Email</Label>
           <Input
-            id="username"
-            name="username"
+            id="email"
+            name="email"
             type="text"
-            placeholder="yourusername"
-            value={form.username}
+            placeholder=""
+            value={form.email}
             onChange={handleChange}
           />
         </div>

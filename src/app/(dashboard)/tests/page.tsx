@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -16,6 +16,8 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { Copy, Eye, Link2, MoreHorizontal, Search, Share2, Trash2 } from "lucide-react"
+import { useAppDispatch } from "@/lib/hooks"
+import { fetchUserTests } from "@/lib/features/user/testManagement"
 // import { useToast } from "@/components/ui/use-toast"
 
 interface Test {
@@ -41,7 +43,7 @@ export default function TestsOverviewPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false)
   const [isShareDialogOpen, setIsShareDialogOpen] = useState<boolean>(false)
   const [currentTest, setCurrentTest] = useState<Test | null>(null)
-
+  const dispatch = useAppDispatch()
   // Sample data
   const [tests, setTests] = useState<Test[]>([
     {
@@ -119,7 +121,21 @@ export default function TestsOverviewPage() {
       avgScore: 81.4,
       createdAt: "2023-04-15",
     },
-  ])
+  ]);
+
+  const fetchUserTestsDetails = async() => {
+    dispatch(fetchUserTests()).then((res) => {
+      console.log(res);
+      setTests(res.payload.response.data.tests)
+    })
+    .catch((err) => {
+      console.log(err)
+    })
+  }
+
+  useEffect(() => {
+    fetchUserTestsDetails();
+  }, [])
 
   const filteredTests = tests.filter((test) => {
     return (
@@ -197,8 +213,8 @@ export default function TestsOverviewPage() {
                   <TableHead>Title</TableHead>
                   <TableHead>Created By</TableHead>
                   <TableHead>Questions</TableHead>
-                  <TableHead>Difficulty Mix</TableHead>
-                  <TableHead>Attempts</TableHead>
+                  <TableHead>Difficulty</TableHead>
+                  {/* <TableHead>Attempts</TableHead> */}
                   <TableHead>Avg. Score</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -210,8 +226,9 @@ export default function TestsOverviewPage() {
                     <TableCell>{test.title}</TableCell>
                     <TableCell>{test.createdBy}</TableCell>
                     <TableCell>{test.totalQuestions}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
+                    <TableCell>{test.totalAttempts}</TableCell>
+
+                      {/* <div className="flex items-center gap-1">
                         <Badge variant="outline" className="bg-green-100">
                           E: {test.difficultyMix.easy}%
                         </Badge>
@@ -221,8 +238,7 @@ export default function TestsOverviewPage() {
                         <Badge variant="outline" className="bg-red-100">
                           H: {test.difficultyMix.hard}%
                         </Badge>
-                      </div>
-                    </TableCell>
+                      </div> */}
                     <TableCell>{test.totalAttempts}</TableCell>
                     <TableCell>{test.avgScore.toFixed(1)}%</TableCell>
                     <TableCell className="text-right">

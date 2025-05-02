@@ -17,7 +17,6 @@ export function SignUpForm() {
 
   const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault()
-    await signIn('credentials', {  email: form.email, password: form.password, userName: form.userName, redirect: false });
   }
 
   return (
