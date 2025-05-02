@@ -7,14 +7,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <head>
         <title>Admin Dashboard</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body>
-        <div className="flex min-h-screen">
-          <main className="flex-1 overflow-x-hidden">{children}</main>
+      <body className="bg-gray-100 dark:bg-zinc-950">
+        <div className="flex min-h-screen items-center justify-center">
+          <main className="w-full max-w-screen-sm px-4">{children}</main>
         </div>
       </body>
     </html>
