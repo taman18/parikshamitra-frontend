@@ -27,7 +27,7 @@ export const addClass = createAsyncThunk(
 export const deleteClass = createAsyncThunk(
     'deleteClass',
     async({accessToken,classId}:{accessToken:string,classId:string}) =>{
-        const addClassApiResponse = await fetch(
+        const deleteClassApiResponse = await fetch(
             `${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/class/delete-class?${classId}`,
             {
                 method:"POST",
@@ -37,8 +37,8 @@ export const deleteClass = createAsyncThunk(
                 },
             }
         );
-        const addClassApiJsonResponse = addClassApiResponse.json();
-        return addClassApiJsonResponse;
+        const deleteClassApiJsonResponse = deleteClassApiResponse.json();
+        return deleteClassApiJsonResponse;
     }
 )
 export const classSlice = createSlice({
@@ -64,6 +64,25 @@ export const classSlice = createSlice({
             .addCase(addClass.rejected,(state,action)=>{
                 state.loading=false;
                 state.error=action.error.message || "Failed to add class."
+            })
+
+            .addCase(deleteClass.pending,(state)=>{
+                state.loading=true;
+                state.error=null;
+            })
+            .addCase(deleteClass.fulfilled,(state,action)=>{
+                state.loading=false;
+                state.data = [
+                    ...state.data,
+                    {
+                      classId: action.payload.data._id,
+                      ...action.payload.data
+                    }
+                  ];
+            })
+            .addCase(deleteClass.rejected,(state,action)=>{
+                state.loading=false;
+                state.error=action.error.message || "Failed to delete class."
             })
     }
 })
