@@ -5,12 +5,16 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Github, Mail } from "lucide-react"
 import { useState } from "react"
-import { signIn } from "next-auth/react"
+import { getSession, signIn } from "next-auth/react"
 import Link from "next/link"
+import { useAppDispatch } from "@/lib/hooks"
+import { setAccessToken } from "@/lib/features/auth/auth.slice"
+import { redirect } from "next/navigation"
 
 
 export function SignInForm() {
-  const [form, setForm] = useState({ email: "", password: "" })
+  const [form, setForm] = useState({ email: "", password: "" });
+  const dispatch = useAppDispatch();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -18,9 +22,15 @@ export function SignInForm() {
 
   const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Sign in form submitted:", form);
     const res = await signIn('credentials', {  email: form.email, password: form.password, redirect: false });
-    console.log(res, '----')
+    if (res?.error) {
+      console.error(res.error);
+    }
+    else {
+      const session = await getSession();
+      dispatch(setAccessToken(session?.user?.accessToken ?? ""));
+      redirect('/dashboard');
+    }
   }
 
   return (
