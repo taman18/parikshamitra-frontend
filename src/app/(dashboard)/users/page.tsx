@@ -41,6 +41,7 @@ import {
   fetchUsers,
   updateUserStatus,
 } from "@/lib/features/user/userManagement";
+import { useSession } from "next-auth/react";
 interface User {
   _id: string;
   userName: string;
@@ -61,12 +62,17 @@ export default function UsersPage() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const dispatch = useAppDispatch();
   const [users, setUsers] = useState<User[]>([]);
-
+  const session = useSession();
   const getUsers = async () => {
-    const users = await dispatch(fetchUsers(searchQuery));
+    const accessToken = await session.data?.user?.accessToken ?? "";
+    const users = await dispatch(
+      fetchUsers({
+        search: searchQuery,
+        accessToken,
+      })
+    );
     setUsers(users.payload.response.data.users);
   };
-
 
   const viewUserDetails = (user: User) => {
     setCurrentUser(user);
@@ -77,14 +83,17 @@ export default function UsersPage() {
     setCurrentUser(user);
     setIsBlockDialogOpen(true);
   };
-  
-  const handleToggleUserStatus = () => {
-    dispatch(
+
+  const handleToggleUserStatus = async() => {
+    await dispatch(
       updateUserStatus({
         id: currentUser?._id ?? "",
         status: currentUser?.status === "active" ? "inactive" : "active",
+        accessToken: session.data?.user?.accessToken ?? ""
       })
     );
+    await getUsers();
+    // setIsUserDetailsOpen(false);
     setIsBlockDialogOpen(false);
   };
 
