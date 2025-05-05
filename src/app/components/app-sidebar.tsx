@@ -22,6 +22,11 @@ export function AppSidebar() {
       icon: BarChart3,
     },
     {
+      title: "Class",
+      href: "/class",
+      icon: BookOpen,
+    },
+    {
       title: "Subjects",
       href: "/subjects",
       icon: BookOpen,

@@ -16,8 +16,9 @@ import {
 } from "@/components/ui/dialog"
 import { Edit, Trash2, Plus } from "lucide-react"
 import { useDispatch } from "react-redux"
-import { addSubject } from "@/lib/features/subject"
+import { addSubject } from "@/lib/features/subjectManagement"
 import { AppDispatch } from "@/lib/store"
+import { useSession } from "next-auth/react"
 // import { useToast } from "@/components/ui/use-toast"
 
 interface Subject {
@@ -28,6 +29,8 @@ interface Subject {
 
 export default function SubjectsPage() {
 //   const { toast } = useToast()
+const session = useSession();
+console.log(session)
   const dispatch = useDispatch<AppDispatch>();
   const [selectedClass, setSelectedClass] = useState<string>("")
   const [subjectName, setSubjectName] = useState<string>("")
@@ -53,7 +56,8 @@ export default function SubjectsPage() {
       console.log("Subject and class not selected")
       return
     }
-    const addedSubject = await dispatch(addSubject({classId: "68120414eec29822db26ba8c", className: selectedClass, subjectName: subjectName}));
+    console.log("subjectName",subjectName)
+    const addedSubject = await dispatch(addSubject({accessToken:session?.data?.user?.accessToken,body:{classId: "68120414eec29822db26ba8c", subjectName: subjectName}}));
     console.log("addedSubject",addedSubject);
     const newSubject: Subject = {
       id: subjects.length + 1,

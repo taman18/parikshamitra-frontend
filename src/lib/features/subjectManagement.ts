@@ -7,23 +7,25 @@ const initialState: SubjectState = {
     className: "",
     subjectId: "",
     subjectName: "",
-    totalQuestionsByClassAndSubject: "",
+    totalQuestionsByClassAndSubject: 0,
   },
   loading: false,
   error: null,
 };
 
 export const addSubject = createAsyncThunk(
-  "subject-AddSubject",
-  async (body: SubjectInterface) => {
+  "subject-addSubject",
+  async ({accessToken,body}:{accessToken:string,body:SubjectInterface}) => {
+    console.log("BODY-------",body)
     const addSubjectApiResponse = await fetch(
       `${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/subject/add-subject`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ body }),
+        body: JSON.stringify(body),
       }
     );
     const addSubjectApiJsonResponse = addSubjectApiResponse.json();
@@ -42,7 +44,7 @@ export const subjectSlice = createSlice({
       })
       .addCase(addSubject.fulfilled, (state, action) => {
         state.loading = false;
-        state.classId = action.classId;
+        state.data = action.payload;
       })
       .addCase(addSubject.rejected, (state, action) => {
         state.error = action.error.message || "Failed to add subject.";
