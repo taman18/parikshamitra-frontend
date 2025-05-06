@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -26,27 +26,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Eye,
-  MoreHorizontal,
-  Search,
-  Share2,
-  Trash2,
-} from "lucide-react";
-import { useAppDispatch } from "@/lib/hooks";
+import { Eye, MoreHorizontal, Search, Share2, Trash2 } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { deleteTest, fetchUserTests } from "@/lib/features/user/testManagement";
 import { useSession } from "next-auth/react";
-import NoDataFound from "@/components/ui/no-data-found";
-
-interface Test {
-  _id: string;
-  testName: string;
-  createdBy: string;
-  totalQuestions: number;
-  difficultyLevel: string;
-  avgScore: number;
-  createdAt: string;
-}
+import { RootState } from "@/lib/store";
+import { toast } from "react-toastify";
+import { Test } from "@/common/interface";
 
 export default function TestsOverviewPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -55,29 +41,54 @@ export default function TestsOverviewPage() {
   const [isShareDialogOpen, setIsShareDialogOpen] = useState<boolean>(false);
   const [currentTest, setCurrentTest] = useState<Test | null>(null);
   const dispatch = useAppDispatch();
-  const session = useSession();
+  const hasFetchedRef = useRef(false);
+  const [tests, setTests] = useState<Test[]>([]);
+  const accessTokenSelector = useAppSelector(
+    (state: RootState) => state.auth.accessToken
+  );
+  const { data: session, status } = useSession();
+  const isFirstSearchRef = useRef(true);
 
-  const fetchUserTestsDetails = async (accessToken: string = '', refreshToken: string= '') => {
-    dispatch(fetchUserTests({
-      accessToken,
-      refreshToken,
-      search: searchQuery.trim()
-    }))
-      .then((res) => {
-        setTests(res.payload.tests.formattedTests);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+  const finalAccessToken = accessTokenSelector ?? session?.user?.accessToken ?? "";
+  const fetchUserTestsDetails = async () => {
+    try {
+      const res = await dispatch(
+        fetchUserTests({
+          accessToken: accessTokenSelector ?? session?.user?.accessToken ?? "",
+          search: searchQuery.trim(),
+        })
+      ).unwrap();
+      setTests(res.tests.formattedTests);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   useEffect(() => {
-    if (session?.data?.user?.accessToken && session?.data?.user?.refreshToken) {
-      fetchUserTestsDetails(session?.data?.user?.accessToken, session?.data?.user?.refreshToken);
+    if (
+      status === "authenticated" &&
+      finalAccessToken &&
+      !hasFetchedRef.current
+    ) {
+      hasFetchedRef.current = true;
+      fetchUserTestsDetails();
     }
-  }, [session, searchQuery]);
-  const [tests, setTests] = useState<Test[]>([]);
+  }, [finalAccessToken, status]);
 
+  useEffect(() => {
+    if (isFirstSearchRef.current) {
+      // Skip calling API on first render (empty search)
+      isFirstSearchRef.current = false;
+      return;
+    }
+   const debounceTimer = setTimeout(() => {
+      fetchUserTestsDetails();
+   }, 400);
+
+   return () => {
+     clearTimeout(debounceTimer);
+   }
+  }, [searchQuery]);
 
   const viewTestDetails = (test: Test) => {
     setCurrentTest(test);
@@ -94,18 +105,30 @@ export default function TestsOverviewPage() {
     setIsShareDialogOpen(true);
   };
 
-  const handleDeleteTest = async() => {
+  const handleDeleteTest = async () => {
     if (!currentTest) return;
-    await dispatch(
-      deleteTest({
-        id: currentTest._id,
-        accessToken: session.data?.user?.accessToken ?? "",
-      })
-    )
-    await fetchUserTestsDetails(session?.data?.user?.accessToken, session?.data?.user?.refreshToken);
-    setIsDeleteDialogOpen(false);
-  };
+    try {
+      const res = await dispatch(
+        deleteTest({
+          id: currentTest._id,
+          accessToken: accessTokenSelector ?? session?.user?.accessToken ?? "",
+        })
+      ).unwrap();
 
+      if (res.success) {
+        toast.success("Test deleted successfully");
+        const updatedTestList = tests.filter(
+          (test) => test._id !== currentTest._id
+        );
+        setTests(updatedTestList);
+        fetchUserTestsDetails();
+      }
+      setIsDeleteDialogOpen(false);
+    } catch (error) {
+      toast.error("Failed to delete test");
+      console.error(error);
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -143,45 +166,49 @@ export default function TestsOverviewPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {tests.length > 0 ? tests.map((test) => (
-                  <TableRow key={test._id}>
-                    <TableCell>{test._id}</TableCell>
-                    <TableCell>{test.testName}</TableCell>
-                    <TableCell>{test.createdBy}</TableCell>
-                    <TableCell>{test.totalQuestions}</TableCell>
-                    <TableCell>{test.difficultyLevel}</TableCell>
-                    <TableCell>{test.avgScore.toFixed(1)}%</TableCell>
-                    {/* <TableCell>{test.avgScore.toFixed(1)}%</TableCell> */}
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => viewTestDetails(test)}
-                          >
-                            <Eye className="h-4 w-4 mr-2" /> View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => openShareDialog(test)}
-                          >
-                            <Share2 className="h-4 w-4 mr-2" /> Share Test
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => openDeleteDialog(test)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" /> Delete Test
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                {tests.length > 0 ? (
+                  tests.map((test: Test) => (
+                    <TableRow key={test._id}>
+                      <TableCell>{test._id}</TableCell>
+                      <TableCell>{test.testName}</TableCell>
+                      <TableCell>{test.createdBy}</TableCell>
+                      <TableCell>{test.totalQuestions}</TableCell>
+                      <TableCell>{test.difficultyLevel}</TableCell>
+                      <TableCell>{test.avgScore}%</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => viewTestDetails(test)}
+                            >
+                              <Eye className="h-4 w-4 mr-2" /> View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => openShareDialog(test)}
+                            >
+                              <Share2 className="h-4 w-4 mr-2" /> Share Test
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => openDeleteDialog(test)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" /> Delete Test
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                      No tests found.
                     </TableCell>
                   </TableRow>
-                )) :
-                (
-                  <NoDataFound text="No Tests Found" />
                 )}
               </TableBody>
             </Table>
@@ -198,10 +225,12 @@ export default function TestsOverviewPage() {
           {currentTest && (
             <div className="space-y-6">
               <div className="space-y-1">
-                <h3 className="text-xl font-semibold">{currentTest.testName}</h3>
+                <h3 className="text-xl font-semibold">
+                  {currentTest.testName}
+                </h3>
                 <p className="text-sm text-muted-foreground">
                   Created by {currentTest.createdBy} on{" "}
-                  {new Date(currentTest.createdAt).toLocaleDateString()}
+                  {/* {new Date(currentTest.createdAt).toLocaleDateString()} */}
                 </p>
               </div>
 
@@ -224,9 +253,6 @@ export default function TestsOverviewPage() {
                       <div className="text-sm font-medium text-muted-foreground">
                         Total Attempts
                       </div>
-                      {/* <div className="text-2xl font-bold">
-                        {currentTest.}
-                      </div> */}
                     </div>
                   </CardContent>
                 </Card>
@@ -241,7 +267,7 @@ export default function TestsOverviewPage() {
                 </Card>
               </div>
 
-              <div className="space-y-4">
+              {/* <div className="space-y-4">
                 <h4 className="text-md font-semibold">Performance Analytics</h4>
                 <div className="h-[200px] flex items-end justify-between gap-2">
                   {[
@@ -263,7 +289,7 @@ export default function TestsOverviewPage() {
                 <div className="text-center text-sm text-muted-foreground">
                   Score Distribution (% of students)
                 </div>
-              </div>
+              </div> */}
             </div>
           )}
         </DialogContent>

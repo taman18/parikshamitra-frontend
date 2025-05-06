@@ -2,7 +2,8 @@ import type React from "react";
 import "@/app/globals.css";
 import NextAuthSessionProvider from "@/wrappers/next-auth-session-provider";
 import StoreProvider from "@/store-provider";
-// import AuthGuard from "@/wrappers/with-auth";
+import TokenLoader from "./components/token-loader";
+import { ToastContainer } from 'react-toastify';
 
 export default function RootLayout({
   children,
@@ -19,7 +20,10 @@ export default function RootLayout({
         <div className="flex min-h-screen">
           <main className="flex-1 overflow-x-hidden">
             <StoreProvider>
-              <NextAuthSessionProvider>{children}</NextAuthSessionProvider>
+              <NextAuthSessionProvider>
+              <TokenLoader />
+              <ToastContainer />
+                {children}</NextAuthSessionProvider>
             </StoreProvider>
           </main>
         </div>

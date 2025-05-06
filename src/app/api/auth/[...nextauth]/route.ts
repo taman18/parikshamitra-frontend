@@ -55,103 +55,93 @@ export const authOptions = {
     },
 
     async jwt({ token, user, account }) {
-      // When user signs in with OAuth providers like Google or GitHub
+      const DEV_BASE_URL = process.env.NEXT_PUBLIC_DEV_BASE_URL;
+    
+      const setTokenData = (token, data) => {
+        token.userId = data._id;
+        token.email = data.email;
+        token.status = data.status ?? "active";
+        token.testTaken = data.testTaken ?? 0;
+        token.image = data.image ?? "";
+        token.averageScore = data.averageScore ?? 0;
+        token.createdAt = data.createdAt ?? "";
+        token.updatedAt = data.updatedAt ?? "";
+        token.accessToken = data.accessToken ?? "";
+        token.refreshToken = data.refreshToken ?? "";
+      };
+    
+      const loginUser = async (email, password) => {
+        const res = await fetch(`${DEV_BASE_URL}/admin/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+    
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data?.data ?? null;
+      };
+    
+      const registerUser = async (email, name, password) => {
+        const res = await fetch(`${DEV_BASE_URL}/admin/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, userName: name, password }),
+        });
+    
+        return res.ok;
+      };
+    
+      // OAuth (Google or GitHub) Sign-in
       if (
         (account?.provider === "google" || account?.provider === "github") &&
         user?.email
       ) {
         try {
-          const userInfoRes = await fetch(
-            `${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/auth/get-user-by-email/${user.email}`,
+          const checkUserRes = await fetch(
+            `${DEV_BASE_URL}/admin/auth/get-user-by-email/${user.email}`,
             {
               method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-              },
+              headers: { "Content-Type": "application/json" },
             }
           );
-          if (userInfoRes.ok) {
-            const userInfo = await userInfoRes.json();
-
-            const fullUser = userInfo.response.data.user;
-            token.userId = fullUser._id;
-            token.email = fullUser.email;
-            token.status = fullUser.status ?? "active";
-            token.testTaken = fullUser.testTaken ?? 0;
-            token.image = fullUser.image ?? "";
-            token.averageScore = fullUser.averageScore ?? 0;
-            token.createdAt = fullUser.createdAt ?? "";
-            token.updatedAt = fullUser.updatedAt ?? "";
-            token.refreshToken = fullUser.refreshToken ?? "";
+    
+          if (checkUserRes.ok) {
+            const userData = await loginUser(user.email, user.id);
+            if (userData) setTokenData(token, userData);
           } else {
-            // If user not found, register a new one
-            const registerRes = await fetch(
-              `${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/auth/register`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  email: user.email,
-                  userName: user.name,
-                  password: user.id,
-                }),
-              }
-            );
-            if (registerRes.ok) {
-              const registerInfo = await registerRes.json();
-              const newUser = registerInfo.data;
-
-              token.userId = newUser._id;
-              token.email = newUser.email;
-              token.status = newUser.status ?? "active";
-              token.testTaken = newUser.testTaken ?? 0;
-              token.image = newUser.image ?? "";
-              token.averageScore = newUser.averageScore ?? 0;
-              token.createdAt = newUser.createdAt ?? "";
-              token.updatedAt = newUser.updatedAt ?? "";
-            }
-            else {
-              const error = await registerRes.json();
-              console.log(error);
+            const registered = await registerUser(user.email, user.name, user.id);
+            if (registered) {
+              const userData = await loginUser(user.email, user.id);
+              if (userData) setTokenData(token, userData);
+            } else {
+              console.error("Registration failed for new OAuth user");
             }
           }
-        } catch (error) {
-          console.error("Error during OAuth user handling", error);
+        } catch (err) {
+          console.error("Error during OAuth login/registration:", err);
         }
       }
-      else {
-        if (user) {
-          token.userId = user._id;
-          token.email = user.email;
-          token.status = user.status ?? "active";
-          token.testTaken = user.testTaken ?? 0;
-          token.image = user.image ?? "";
-          token.averageScore = user.averageScore ?? 0;
-          token.createdAt = user.createdAt ?? "";
-          token.refreshToken = user.refreshToken ?? "";
-          token.accessToken = user.accessToken ?? "";
-          token.updatedAt = user.updatedAt ?? "";
-        }
-      }
-
-      // For credentials login, user already available
+    
+      // Credentials-based sign-in or fallback
       if (user && !token.userId) {
-        token.userId = user._id;
-        token.email = user.email;
-        token.status = user.status ?? "active";
-        token.testTaken = user.testTaken ?? 0;
-        token.image = user.image ?? user.picture ?? "";
-        token.averageScore = user.averageScore ?? 0;
-        token.createdAt = user.createdAt ?? "";
-        token.updatedAt = user.updatedAt ?? "";
-        token.accessToken = user.accessToken ?? "";
-        token.refreshToken = user.refreshToken ?? "";
+        setTokenData(token, {
+          _id: user._id,
+          email: user.email,
+          status: user.status,
+          testTaken: user.testTaken,
+          image: user.image ?? user.picture ?? "",
+          averageScore: user.averageScore,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+          accessToken: user.accessToken,
+          refreshToken: user.refreshToken,
+        });
       }
-
+    
       return token;
     },
+    
 
     async session({ session, token }) {
       session.user.userId = token.userId;
@@ -164,6 +154,7 @@ export const authOptions = {
       session.user.image = token.picture;
       session.user.accessToken = token.accessToken ?? "";
       session.user.refreshToken = token.refreshToken ?? "";
+      session.status = "authenticated";
       return session;
     },
   },
