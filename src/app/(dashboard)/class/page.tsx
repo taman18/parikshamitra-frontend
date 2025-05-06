@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
@@ -17,28 +17,19 @@ import {
 import { Edit, Trash2, Plus } from "lucide-react"
 import { useDispatch, useSelector } from "react-redux"
 import { AppDispatch, RootState } from "@/lib/store"
-import { addClass } from "@/lib/features/classManagement"
+import { addClass, deleteClass, editClass, getClasses, updateReduxClassList } from "@/lib/features/classManagement"
 import { useSession } from "next-auth/react"
 import { ClassInterface } from "@/common/interface"
 
-interface ClassEntry {
-  id: number
-  name: string
-  category: "stream" | "class"
-}
-
 export default function ClassesPage() {
     const session = useSession();
-    console.log("session",session)
-    const selector = useSelector((state:RootState)=>state.class)
-    console.log("class redux tore ",selector.data)
+    const classList = useSelector((state:RootState)=>state?.class?.data)
   const dispatch = useDispatch<AppDispatch>()
   const [category, setCategory] = useState<"" | "class" | "stream">("")
   const [className, setClassName] = useState<string>("")
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false)
-  const [currentClass, setCurrentClass] = useState<ClassEntry | null>(null)
-
+  const [currentClass, setCurrentClass] = useState<ClassInterface | null>(null)
   const handleAddClass = async() => {
     console.log("-----");
     if (!category || !className.trim()) {
@@ -53,15 +44,16 @@ export default function ClassesPage() {
   }
 
   const openEditDialog = (cls: ClassInterface) => {
-    // setCurrentClass(cls)
+    setCurrentClass(cls)
     setClassName(cls.className)
     setCategory(cls.category)
     setIsEditDialogOpen(true)
   }
 
-  const handleEditClass = () => {
+  const handleEditClass = async() => {
     if (!currentClass || !category || !className.trim()) return
-
+    const editedClass =await dispatch(editClass({accessToken:session?.data?.user?.accessToken,classId:currentClass.classId,body:{className:className,category:category}}))
+    console.log("editclass",editedClass)
     setIsEditDialogOpen(false)
     setCurrentClass(null)
     setClassName("")
@@ -69,13 +61,17 @@ export default function ClassesPage() {
   }
 
   const openDeleteDialog = (cls: ClassInterface) => {
-    // setCurrentClass(cls)
+    setCurrentClass(cls)
     setIsDeleteDialogOpen(true)
   }
 
-  const handleDeleteClass = () => {
+  const handleDeleteClass = async() => {
+    console.log("currentClass",currentClass)
     if (!currentClass) return
-
+    console.log(currentClass)
+    console.log("00000000")
+    const deletedClass =await dispatch(deleteClass({accessToken:session?.data?.user?.accessToken,classId:currentClass.classId}))
+    console.log("deletedClass",deletedClass);
     setIsDeleteDialogOpen(false)
     setCurrentClass(null)
   }
@@ -128,7 +124,7 @@ export default function ClassesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {selector.data.map((cls) => (
+                {classList?.map((cls) => (
                   <TableRow key={cls.classId}>
                     <TableCell>{cls.classId}</TableCell>
                     <TableCell>{cls.className}</TableCell>
