@@ -1,8 +1,9 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { TestState } from "@/common/interface";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export const fetchUserTests = createAsyncThunk(
   "test/fetchUserTests",
-  async ({ accessToken, refreshToken, search }: { accessToken: string; refreshToken: string, search: string }) => {
+  async ({ accessToken, search }: { accessToken: string, search: string }) => {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_DEV_BASE_URL}/client/test/get-test?search=${search}`,
       {
@@ -32,16 +33,24 @@ export const deleteTest = createAsyncThunk(
   }
 )
 
-const initialState = {
-  tests: [] as any[],
+const initialState: TestState = {
+  testsListing: [],
+  totalTests: 0,
+  totalPages: 0,
   loading: false,
-  error: null as string | null,
+  error: null,
 };
 
-export const userSlice = createSlice({
+export const testSlice = createSlice({
   name: "test",
   initialState,
-  reducers: {},
+  reducers: {
+    setUpdatedTests: (state, action: PayloadAction<TestState>) => {
+      state.testsListing = action.payload.testsListing.filter(
+        (test) => !state.testsListing.find((t) => t._id === test._id)
+      );
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchUserTests.pending, (state) => {
@@ -50,13 +59,17 @@ export const userSlice = createSlice({
       })
       .addCase(fetchUserTests.fulfilled, (state, action) => {
         state.loading = false;
-        state.tests = action.payload;
+        const { tests } = action.payload;
+        state.testsListing = tests.formattedTests;
+        state.totalTests = tests.totalTests;
+        state.totalPages = tests.totalPages;
       })
       .addCase(fetchUserTests.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message ?? "Failed to fetch users";
+        state.error = action.error.message ?? "Failed to fetch tests";
       });
   },
 });
 
-export default userSlice.reducer;
+export const { setUpdatedTests } = testSlice.actions;
+export default testSlice.reducer;

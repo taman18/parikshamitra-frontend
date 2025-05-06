@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -36,12 +36,13 @@ import {
   UserX,
 } from "lucide-react";
 // import { useToast } from "@/components/ui/use-toast"
-import { useAppDispatch } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   fetchUsers,
   updateUserStatus,
 } from "@/lib/features/user/userManagement";
 import { useSession } from "next-auth/react";
+import { RootState } from "@/lib/store";
 interface User {
   _id: string;
   userName: string;
@@ -55,23 +56,46 @@ interface User {
 }
 
 export default function UsersPage() {
-  //   const { toast } = useToast()
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isUserDetailsOpen, setIsUserDetailsOpen] = useState<boolean>(false);
   const [isBlockDialogOpen, setIsBlockDialogOpen] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const dispatch = useAppDispatch();
+  const accessTokenSelector = useAppSelector(
+    (state: RootState) => state.auth.accessToken
+  );
+  const blockUserIsLoading = useAppSelector(
+    (state: RootState) => state.user.loading
+  );
   const [users, setUsers] = useState<User[]>([]);
-  const session = useSession();
+  const { data: session, status } = useSession();
+  const finalAccessToken =
+    accessTokenSelector ?? session?.user?.accessToken ?? "";
+  const hasFetchedRef = useRef(false);
+  const isFirstSearchRef = useRef(true);
+
+  const getStatusButtonLabel = () => {
+    const isActive = currentUser?.status === "active";
+
+    if (blockUserIsLoading) {
+      return isActive ? "Blocking..." : "Unblocking...";
+    }
+
+    return isActive ? "Block User" : "Unblock User";
+  };
+
   const getUsers = async () => {
-    const accessToken = await session.data?.user?.accessToken ?? "";
-    const users = await dispatch(
-      fetchUsers({
-        search: searchQuery,
-        accessToken,
-      })
-    );
-    setUsers(users.payload.response.data.users);
+    try {
+      const users = await dispatch(
+        fetchUsers({
+          search: searchQuery,
+          accessToken: finalAccessToken ?? "",
+        })
+      ).unwrap();
+      setUsers(users.response.data.users);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const viewUserDetails = (user: User) => {
@@ -84,22 +108,66 @@ export default function UsersPage() {
     setIsBlockDialogOpen(true);
   };
 
-  const handleToggleUserStatus = async() => {
-    await dispatch(
-      updateUserStatus({
-        id: currentUser?._id ?? "",
-        status: currentUser?.status === "active" ? "inactive" : "active",
-        accessToken: session.data?.user?.accessToken ?? ""
-      })
-    );
-    await getUsers();
-    // setIsUserDetailsOpen(false);
-    setIsBlockDialogOpen(false);
+  const handleToggleUserStatus = async () => {
+    if (!currentUser?._id) {
+      console.error("No user selected to toggle status.");
+      return;
+    }
+
+    const accessToken = accessTokenSelector ?? session?.user?.accessToken;
+    if (!accessToken) {
+      console.error("Access token is missing.");
+      return;
+    }
+
+    if (blockUserIsLoading) {
+      console.error("Block user action is already in progress.");
+      return;
+    }
+
+    try {
+      await dispatch(
+        updateUserStatus({
+          id: currentUser._id,
+          status: currentUser.status === "active" ? "inactive" : "active",
+          accessToken,
+        })
+      ).unwrap();
+      setIsBlockDialogOpen(false);
+      await getUsers();
+    } catch (error) {
+      console.error("Failed to toggle user status:", error);
+    }
   };
 
   useEffect(() => {
-    getUsers();
-  }, [searchQuery, dispatch]);
+    if (
+      status === "authenticated" &&
+      finalAccessToken &&
+      !hasFetchedRef.current
+    ) {
+      hasFetchedRef.current = true;
+      getUsers(); // initial call
+    }
+  }, [status, finalAccessToken]);
+  
+
+  useEffect(() => {
+    if (isFirstSearchRef.current) {
+      // Skip calling API on first render (empty search)
+      isFirstSearchRef.current = false;
+      return;
+    }
+  
+    const debounceTimer = setTimeout(() => {
+      getUsers(); // call with new searchQuery (including "")
+    }, 400);
+  
+    return () => {
+      clearTimeout(debounceTimer);
+    };
+  }, [searchQuery]);
+  
 
   return (
     <div className="p-6 space-y-6">
@@ -136,54 +204,62 @@ export default function UsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user._id}>
-                    <TableCell>{user._id}</TableCell>
-                    <TableCell>{user.userName}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          user.status === "active" ? "outline" : "destructive"
-                        }
-                      >
-                        {user.status === "active" ? (
-                          <ShieldCheck className="h-3 w-3 mr-1" />
-                        ) : (
-                          <ShieldAlert className="h-3 w-3 mr-1" />
-                        )}
-                        {user.status.charAt(0).toUpperCase() +
-                          user.status.slice(1)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{user.testTaken}</TableCell>
-                    <TableCell>{user.averageScore.toFixed(1)}%</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => viewUserDetails(user)}
-                          >
-                            <Eye className="h-4 w-4 mr-2" /> View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => openBlockDialog(user)}
-                          >
-                            <UserX className="h-4 w-4 mr-2" />
-                            {user.status === "active"
-                              ? "Block User"
-                              : "Unblock User"}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                {users?.length > 0 ? (
+                  users.map((user) => (
+                    <TableRow key={user._id}>
+                      <TableCell>{user._id}</TableCell>
+                      <TableCell>{user.userName}</TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            user.status === "active" ? "outline" : "destructive"
+                          }
+                        >
+                          {user.status === "active" ? (
+                            <ShieldCheck className="h-3 w-3 mr-1" />
+                          ) : (
+                            <ShieldAlert className="h-3 w-3 mr-1" />
+                          )}
+                          {user.status.charAt(0).toUpperCase() +
+                            user.status.slice(1)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{user.testTaken}</TableCell>
+                      <TableCell>{user.averageScore.toFixed(1)}%</TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => viewUserDetails(user)}
+                            >
+                              <Eye className="h-4 w-4 mr-2" /> View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => openBlockDialog(user)}
+                            >
+                              <UserX className="h-4 w-4 mr-2" />
+                              {user.status === "active"
+                                ? "Block User"
+                                : "Unblock User"}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center">
+                      No users found.
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </div>
@@ -297,7 +373,7 @@ export default function UsersPage() {
               }
               onClick={() => handleToggleUserStatus()}
             >
-              {currentUser?.status === "active" ? "Block User" : "Unblock User"}
+              {getStatusButtonLabel()}
             </Button>
           </DialogFooter>
         </DialogContent>

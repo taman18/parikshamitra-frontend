@@ -3,6 +3,8 @@ import "@/app/globals.css";
 import NextAuthSessionProvider from "@/wrappers/next-auth-session-provider";
 import StoreProvider from "@/store-provider";
 import { ThemeProvider } from "next-themes";
+import TokenLoader from "./components/token-loader";
+import { ToastContainer } from 'react-toastify';
 
 export default function RootLayout({
   children,
