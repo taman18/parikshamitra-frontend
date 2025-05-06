@@ -1,4 +1,5 @@
 'use client';
+import ReduxProvider from '@/redux-provider';
 import { SessionProvider } from 'next-auth/react';
 
 export default function NextAuthSessionProvider({
@@ -6,5 +7,5 @@ export default function NextAuthSessionProvider({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return <SessionProvider><ReduxProvider>{children}</ReduxProvider></SessionProvider>;
 }

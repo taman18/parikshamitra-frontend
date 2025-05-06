@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
@@ -15,10 +15,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Edit, Trash2, Plus } from "lucide-react"
-import { useDispatch } from "react-redux"
-import { addSubject } from "@/lib/features/subjectManagement"
-import { AppDispatch } from "@/lib/store"
+import { useDispatch, useSelector } from "react-redux"
+import { addSubject, getSubjects } from "@/lib/features/subjectManagement"
+import { AppDispatch, RootState } from "@/lib/store"
 import { useSession } from "next-auth/react"
+import { useAppDispatch, useAppSelector } from "@/lib/hooks"
+import { ClassInterface, SubjectInterface } from "@/common/interface"
 // import { useToast } from "@/components/ui/use-toast"
 
 interface Subject {
@@ -29,43 +31,40 @@ interface Subject {
 
 export default function SubjectsPage() {
 //   const { toast } = useToast()
-const session = useSession();
-console.log(session)
-  const dispatch = useDispatch<AppDispatch>();
+const subjectList = useAppSelector((state:RootState)=>state.subject.data);
   const [selectedClass, setSelectedClass] = useState<string>("")
   const [subjectName, setSubjectName] = useState<string>("")
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false)
   const [currentSubject, setCurrentSubject] = useState<Subject | null>(null)
 
-  // Sample data
-  const [subjects, setSubjects] = useState<Subject[]>([
-    { id: 1, name: "Mathematics", class: "Class 6" },
-    { id: 2, name: "Science", class: "Class 6" },
-    { id: 3, name: "English", class: "Class 7" },
-    { id: 4, name: "Physics", class: "Class 9" },
-    { id: 5, name: "Chemistry", class: "Class 9" },
-    { id: 6, name: "Biology", class: "Class 10" },
-    { id: 7, name: "History", class: "Class 8" },
-  ])
+  const dispatch = useAppDispatch();
+  const { data: session } = useSession();
+  useEffect(() => {
+      if (session?.user?.accessToken) {
+        const fetchClasses = async () => {
+          try {
+            const response = await dispatch(getSubjects({ accessToken: session.user.accessToken }));
+            // await dispatch(updateReduxClassList(response.payload?.data));
+          } catch (err) {
+            console.error('Error fetching classes:', err);
+          }
+        };
+  
+        fetchClasses();
+      }
+    }, [dispatch, session?.user?.accessToken]);
+  
 
-  const classes = ["Class 6", "Class 7", "Class 8", "Class 9", "Class 10", "Class 11", "Class 12"]
-
+  const classes = useSelector((state:RootState)=>state.class.data)
   const handleAddSubject = async() => {
     if (!selectedClass || !subjectName.trim()) {
       console.log("Subject and class not selected")
       return
     }
     console.log("subjectName",subjectName)
-    const addedSubject = await dispatch(addSubject({accessToken:session?.data?.user?.accessToken,body:{classId: "68120414eec29822db26ba8c", subjectName: subjectName}}));
+    const addedSubject = await dispatch(addSubject({accessToken:session?.user?.accessToken,body:{classId: selectedClass, subjectName: subjectName}}));
     console.log("addedSubject",addedSubject);
-    const newSubject: Subject = {
-      id: subjects.length + 1,
-      name: subjectName,
-      class: selectedClass,
-    }
-
-    setSubjects([...subjects, newSubject])
     setSubjectName("")
 
   }
@@ -115,6 +114,7 @@ console.log(session)
     // })
   }
 
+  console.log("subjectList ",subjectList);
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">Subjects</h1>
@@ -131,8 +131,8 @@ console.log(session)
               </SelectTrigger>
               <SelectContent>
                 {classes.map((cls) => (
-                  <SelectItem key={cls} value={cls}>
-                    {cls}
+                  <SelectItem key={cls?.classId} value={cls?.classId||""}>
+                    {cls?.className}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -163,8 +163,8 @@ console.log(session)
               <SelectContent>
                 <SelectItem value="all">All Classes</SelectItem>
                 {classes.map((cls) => (
-                  <SelectItem key={cls} value={cls}>
-                    {cls}
+                  <SelectItem key={cls?.classId} value={cls?.classId||""}>
+                    {cls?.className}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -182,13 +182,13 @@ console.log(session)
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {subjects
-                  .filter((subject) => !selectedClass || subject.class === selectedClass)
+                {subjectList
+                  .filter((subject) => !selectedClass || subject.className === selectedClass)
                   .map((subject) => (
-                    <TableRow key={subject.id}>
-                      <TableCell>{subject.id}</TableCell>
-                      <TableCell>{subject.name}</TableCell>
-                      <TableCell>{subject.class}</TableCell>
+                    <TableRow key={subject?.subjectId}>
+                      <TableCell>{subject?.subjectId}</TableCell>
+                      <TableCell>{subject?.subjectName}</TableCell>
+                      <TableCell>{subject?.class}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button variant="outline" size="icon" onClick={() => openEditDialog(subject)}>
@@ -223,8 +223,8 @@ console.log(session)
                 </SelectTrigger>
                 <SelectContent>
                   {classes.map((cls) => (
-                    <SelectItem key={cls} value={cls}>
-                      {cls}
+                    <SelectItem key={cls.classId} value={cls.classId||""}>
+                      {cls.className}
                     </SelectItem>
                   ))}
                 </SelectContent>
