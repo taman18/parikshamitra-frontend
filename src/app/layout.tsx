@@ -25,6 +25,9 @@ export default function RootLayout({
         >
           <StoreProvider>
             <NextAuthSessionProvider>
+              <ThemeProvider />
+              <ToastContainer />
+              <TokenLoader />
               {children}
             </NextAuthSessionProvider>
           </StoreProvider>
