@@ -1,11 +1,12 @@
 import { TestState } from "@/common/interface";
+import { API_URIS } from "@/lib/constant";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export const fetchUserTests = createAsyncThunk(
   "test/fetchUserTests",
   async ({ accessToken, search }: { accessToken: string, search: string }) => {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_DEV_BASE_URL}/client/test/get-test?search=${search}`,
+      `${process.env.NEXT_PUBLIC_DEV_BASE_URL}/${API_URIS.tests.getTests}?search=${search}`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -21,7 +22,7 @@ export const fetchUserTests = createAsyncThunk(
 export const deleteTest = createAsyncThunk(
   "test/deleteTest",
   async ({ id, accessToken }: { id: string; accessToken: string }) => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/test/delete-test/${id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_DEV_BASE_URL}/${API_URIS.tests.deleteTest}/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

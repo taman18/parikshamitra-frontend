@@ -1,3 +1,4 @@
+import { API_URIS } from '@/lib/constant';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface AuthState {
@@ -14,7 +15,7 @@ export const signUp = createAsyncThunk(
   "auth/signUpUser",
   async ({ email, userName, password }: { email: string; userName: string; password: string }) => {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/auth/register`,
+      `${process.env.NEXT_PUBLIC_DEV_BASE_URL}/${API_URIS.auth.register}`,
       {
         method: "POST",
         headers: {
@@ -32,7 +33,7 @@ export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
   async ({ accessToken }: { accessToken: string }) => {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/auth/logout`,
+      `${process.env.NEXT_PUBLIC_DEV_BASE_URL}/${API_URIS.auth.logout}`,
       {
         method: "POST",
         headers: {
