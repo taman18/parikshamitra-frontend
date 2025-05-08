@@ -115,7 +115,7 @@ export const getSubjects = createAsyncThunk(
 export const filterSubjects = createAsyncThunk(
   "filterSubjects",
   async({accessToken,classId,limit,page}:{accessToken:string,classId:string,page:number,limit:number})=>{
-    const filteredSubjectApiResponse = await fetch(`${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/subject/filter-subject?classId=${classId}&&page=${page}&&limit=${limit}`,
+    const filteredSubjectApiResponse = await fetch(`${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/subject/filter-subject?classId=${classId}&page=${page}&limit=${limit}`,
       {
         method:"GET",
         headers:{

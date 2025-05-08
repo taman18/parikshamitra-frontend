@@ -85,4 +85,12 @@ export interface QuestionState {
 
 export interface ApiResponseQuestionInterface extends QuestionInterface{
     _id:string,
+    subjectInfo:{
+      _id:string,
+      subjectName:string
+    },
+    classInfo:{
+      _id:string,
+      className:string
+    }
 }

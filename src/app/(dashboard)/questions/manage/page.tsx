@@ -23,6 +23,7 @@ import { Edit, Trash2, MoreHorizontal, Search } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "@/lib/hooks"
 import { useSession } from "next-auth/react"
 import { fetchQuestions, fetchSubjects } from "@/utils/helper"
+import { QuestionInterface } from "@/common/interface"
 // import { useToast } from "@/components/ui/use-toast"
 
 interface Question {
@@ -49,13 +50,13 @@ export default function ManageQuestionsPage() {
   const [editedCorrectAnswer, setEditedCorrectAnswer] = useState<string>("")
     const { data: session } = useSession();
     const dispatch = useAppDispatch();
-  const getSubjects = useAppSelector((state)=>state.question.data)
-  console.log(getSubjects);
+  const questions = useAppSelector((state)=>state.question.data)
+  console.log(questions);
   useEffect(() => {
     if (session?.user?.accessToken) {
-      fetchQuestions(dispatch, session?.user?.accessToken,1,10);
+      fetchQuestions(dispatch, session?.user?.accessToken,selectedClass,selectedSubject,selectedDifficulty,1,30);
     }
-  }, []);
+  }, [session?.user?.accessToken,dispatch]);
   // Sample data
   const classes = ["Class 6", "Class 7", "Class 8", "Class 9", "Class 10", "Class 11", "Class 12"]
 
@@ -71,87 +72,38 @@ export default function ManageQuestionsPage() {
 
   const difficulties = ["Easy", "Medium", "Hard"]
 
-  const [questions, setQuestions] = useState<Question[]>([
-    {
-      id: 1,
-      question: "What is the value of π (pi) to two decimal places?",
-      options: ["3.14", "3.15", "3.16", "3.17"],
-      correctAnswer: "A",
-      subject: "Mathematics",
-      class: "Class 8",
-      difficulty: "Easy",
-    },
-    {
-      id: 2,
-      question: "Which of the following is not a type of chemical bond?",
-      options: ["Ionic Bond", "Covalent Bond", "Magnetic Bond", "Hydrogen Bond"],
-      correctAnswer: "C",
-      subject: "Chemistry",
-      class: "Class 9",
-      difficulty: "Medium",
-    },
-    {
-      id: 3,
-      question: "What is the capital of France?",
-      options: ["London", "Berlin", "Paris", "Madrid"],
-      correctAnswer: "C",
-      subject: "Social Studies",
-      class: "Class 6",
-      difficulty: "Easy",
-    },
-    {
-      id: 4,
-      question: "Which of the following is not a programming language?",
-      options: ["Java", "Python", "HTML", "C++"],
-      correctAnswer: "C",
-      subject: "Computer Science",
-      class: "Class 11",
-      difficulty: "Medium",
-    },
-    {
-      id: 5,
-      question: "What is the formula for calculating the area of a circle?",
-      options: ["πr²", "2πr", "πr³", "2πr²"],
-      correctAnswer: "A",
-      subject: "Mathematics",
-      class: "Class 7",
-      difficulty: "Medium",
-    },
-  ])
+  // const filteredQuestions = questions.filter((question) => {
+  //   const matchesSearch = searchQuery ? question.question.toLowerCase().includes(searchQuery.toLowerCase()) : true
+  //   const matchesClass = selectedClass ? question.class === selectedClass : true
+  //   const matchesSubject = selectedSubject ? question.subject === selectedSubject : true
+  //   const matchesDifficulty = selectedDifficulty ? question.difficulty === selectedDifficulty : true
 
-  const filteredQuestions = questions.filter((question) => {
-    const matchesSearch = searchQuery ? question.question.toLowerCase().includes(searchQuery.toLowerCase()) : true
-    const matchesClass = selectedClass ? question.class === selectedClass : true
-    const matchesSubject = selectedSubject ? question.subject === selectedSubject : true
-    const matchesDifficulty = selectedDifficulty ? question.difficulty === selectedDifficulty : true
+  //   return matchesSearch && matchesClass && matchesSubject && matchesDifficulty
+  // })
 
-    return matchesSearch && matchesClass && matchesSubject && matchesDifficulty
-  })
-
-  const openEditDialog = (question: Question) => {
-    setCurrentQuestion(question)
-    setEditedQuestion(question.question)
-    setEditedOptions([...question.options])
-    setEditedCorrectAnswer(question.correctAnswer)
-    setIsEditDialogOpen(true)
+  const openEditDialog = (question: QuestionInterface) => {
+    // setCurrentQuestion(question)
+    // setEditedQuestion(question.question)
+    // setEditedOptions([...question.options])
+    // setEditedCorrectAnswer(question.correctAnswer)
+    // setIsEditDialogOpen(true)
   }
 
   const handleEditQuestion = () => {
-    if (!currentQuestion) return
+    // if (!currentQuestion) return
 
-    const updatedQuestions = questions.map((q) =>
-      q.id === currentQuestion.id
-        ? {
-            ...q,
-            question: editedQuestion,
-            options: [...editedOptions],
-            correctAnswer: editedCorrectAnswer,
-          }
-        : q,
-    )
+    // const updatedQuestions = questions.map((q) =>
+    //   q.id === currentQuestion.id
+    //     ? {
+    //         ...q,
+    //         question: editedQuestion,
+    //         options: [...editedOptions],
+    //         correctAnswer: editedCorrectAnswer,
+    //       }
+    //     : q,
+    // )
 
-    setQuestions(updatedQuestions)
-    setIsEditDialogOpen(false)
+    // setIsEditDialogOpen(false)
 
     // toast({
     //   title: "Success",
@@ -159,17 +111,16 @@ export default function ManageQuestionsPage() {
     // })
   }
 
-  const openDeleteDialog = (question: Question) => {
-    setCurrentQuestion(question)
-    setIsDeleteDialogOpen(true)
+  const openDeleteDialog = (question: QuestionInterface) => {
+    // setCurrentQuestion(question?.question)
+    // setIsDeleteDialogOpen(true)
   }
 
   const handleDeleteQuestion = () => {
-    if (!currentQuestion) return
+    // if (!currentQuestion) return
 
-    const updatedQuestions = questions.filter((q) => q.id !== currentQuestion.id)
-    setQuestions(updatedQuestions)
-    setIsDeleteDialogOpen(false)
+    // const updatedQuestions = questions.filter((q) => q.id !== currentQuestion.id)
+    // setIsDeleteDialogOpen(false)
 
     // toast({
     //   title: "Success",
@@ -178,9 +129,9 @@ export default function ManageQuestionsPage() {
   }
 
   const handleEditOptionChange = (index: number, value: string) => {
-    const newOptions = [...editedOptions]
-    newOptions[index] = value
-    setEditedOptions(newOptions)
+    // const newOptions = [...editedOptions]
+    // newOptions[index] = value
+    // setEditedOptions(newOptions)
   }
 
   return (
@@ -270,23 +221,23 @@ export default function ManageQuestionsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredQuestions.map((question) => (
-                  <TableRow key={question.id}>
-                    <TableCell>{question.id}</TableCell>
-                    <TableCell className="max-w-md truncate">{question.question}</TableCell>
-                    <TableCell>{question.subject}</TableCell>
-                    <TableCell>{question.class}</TableCell>
+                {questions?.map((question) => (
+                  <TableRow key={question?.questionId}>
+                    <TableCell>{question?.questionId}</TableCell>
+                    <TableCell className="max-w-md truncate">{question?.question}</TableCell>
+                    <TableCell>{question?.subjectName}</TableCell>
+                    <TableCell>{question?.className}</TableCell>
                     <TableCell>
                       <Badge
                         variant={
-                          question.difficulty === "Easy"
+                          question?.difficultyLevel === "Easy"
                             ? "outline"
-                            : question.difficulty === "Medium"
+                            : question?.difficultyLevel === "Medium"
                               ? "secondary"
                               : "default"
                         }
                       >
-                        {question.difficulty}
+                        {question?.difficultyLevel}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
