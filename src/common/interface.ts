@@ -37,20 +37,21 @@ export interface ApiResponseClassInterface extends ClassInterface {
   _id: string;
 }
 
-// Test — describes a single test
-export interface Test {
-  _id: string;
-  testName: string;
-  createdBy: string;
-  totalQuestions: number;
-  difficultyLevel: string;
-  avgScore: number;
-  createdAt: string;
-  marksObtained: number;
-  subjectName: string;
-  totalMarks: number;
-  updatedAt: string;
-}
+  // Test — describes a single test
+  export interface Test {
+    _id: string;
+    testName: string;
+    createdBy: string;
+    totalQuestions: number;
+    difficultyLevel: string;
+    avgScore: number;
+    createdAt: string;
+    marksObtained: number;
+    subjectName: string;
+    totalMarks: number;
+    updatedAt: string;
+    className: string;
+  }
 
 // TestState — Redux state structure
 export interface TestState {

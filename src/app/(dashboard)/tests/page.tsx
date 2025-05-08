@@ -33,6 +33,7 @@ import { useSession } from "next-auth/react";
 import { RootState } from "@/lib/store";
 import { toast } from "react-toastify";
 import { Test } from "@/common/interface";
+import { convertToDateFormat } from "@/lib/utils";
 
 export default function TestsOverviewPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -129,7 +130,6 @@ export default function TestsOverviewPage() {
       console.error(error);
     }
   };
-
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">Tests Overview</h1>
@@ -230,7 +230,7 @@ export default function TestsOverviewPage() {
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   Created by {currentTest.createdBy} on{" "}
-                  {/* {new Date(currentTest.createdAt).toLocaleDateString()} */}
+                  {convertToDateFormat(currentTest.createdAt)}
                 </p>
               </div>
 
@@ -251,16 +251,10 @@ export default function TestsOverviewPage() {
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="text-sm font-medium text-muted-foreground">
-                        Total Attempts
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm font-medium text-muted-foreground">
                         Average Score
+                      </div>
+                      <div className="text-2xl font-bold">
+                        {currentTest.avgScore ?? 0}
                       </div>
                     </div>
                   </CardContent>

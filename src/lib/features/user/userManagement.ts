@@ -1,9 +1,10 @@
+import { API_URIS } from '@/lib/constant';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 
 export const fetchUsers = createAsyncThunk(
   'users/fetchByIdStatus',
   async ({search, accessToken}: {search: string, accessToken: string}) => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/user/all-users?search=${search}`,
+    const response = await fetch(`${process.env.NEXT_PUBLIC_DEV_BASE_URL}/${API_URIS.users.getAllUsers}?search=${search}`,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -19,28 +20,13 @@ export const fetchUsers = createAsyncThunk(
 export const updateUserStatus = createAsyncThunk(
   'users/updateUserStatus',
   async ({ id, status, accessToken }: { id: string; status: string, accessToken: string }) => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/user/update-status/${id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_DEV_BASE_URL}/${API_URIS.users.updateUserStatus}/${id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
         authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({ status }),
-    })
-    const data = await response.json()
-    return data
-  }
-)
-
-export const logoutUser = createAsyncThunk(
-  'users/logoutUser',
-  async ({accessToken}: {accessToken: string}) => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/auth/logout`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        authorization: `Bearer ${accessToken}`,
-      },
     })
     const data = await response.json()
     return data
