@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
@@ -20,6 +20,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Edit, Trash2, MoreHorizontal, Search } from "lucide-react"
+import { useAppDispatch, useAppSelector } from "@/lib/hooks"
+import { useSession } from "next-auth/react"
+import { fetchQuestions, fetchSubjects } from "@/utils/helper"
 // import { useToast } from "@/components/ui/use-toast"
 
 interface Question {
@@ -44,7 +47,15 @@ export default function ManageQuestionsPage() {
   const [editedQuestion, setEditedQuestion] = useState<string>("")
   const [editedOptions, setEditedOptions] = useState<string[]>(["", "", "", ""])
   const [editedCorrectAnswer, setEditedCorrectAnswer] = useState<string>("")
-
+    const { data: session } = useSession();
+    const dispatch = useAppDispatch();
+  const getSubjects = useAppSelector((state)=>state.question.data)
+  console.log(getSubjects);
+  useEffect(() => {
+    if (session?.user?.accessToken) {
+      fetchQuestions(dispatch, session?.user?.accessToken,1,10);
+    }
+  }, []);
   // Sample data
   const classes = ["Class 6", "Class 7", "Class 8", "Class 9", "Class 10", "Class 11", "Class 12"]
 
