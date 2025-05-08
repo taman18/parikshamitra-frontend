@@ -28,8 +28,9 @@ export default function DashboardPage() {
   const accessToken = accessTokenSelector ?? session?.user?.accessToken;
   const tiles = useAppSelector((state: RootState) => state.dashboard.tiles);
   const recentTests = useAppSelector(
-    (state: RootState) => state.test.getTests.testsListing
+    (state: RootState) => state.test.getTests
   );
+  const { testsListing } = recentTests;
   const [range, setRange] = useState("day");
 
   const fetchTilesData = async () => {
@@ -43,9 +44,14 @@ export default function DashboardPage() {
   useEffect(() => {
     if (accessToken) {
       fetchTilesData();
-      fetchRecentTests();
     }
   }, [accessToken, range]);
+
+  useEffect(() => {
+    if (accessToken) {
+      fetchRecentTests();
+    }
+  }, [accessToken]);
 
   return (
     <div className="p-6 space-y-6">
@@ -216,8 +222,8 @@ export default function DashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentTests.length > 0 ? (
-                    recentTests.map((tests) => (
+                  {testsListing.length > 0 ? (
+                    testsListing.map((tests) => (
                       <TableRow key={tests._id} className="border-b">
                         <TableCell className="py-3 px-4">{tests._id}</TableCell>
                         <TableCell className="py-3 px-4">
@@ -245,9 +251,13 @@ export default function DashboardPage() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={10} className="h-24 text-center">
+                      {recentTests.loading ? (<TableCell colSpan={10} className="h-24 text-center">Loading...</TableCell>)
+                      :
+                      (<TableCell colSpan={10} className="h-24 text-center">
                         No tests found.
-                      </TableCell>
+                      </TableCell>)
+                      }
+                      
                     </TableRow>
                   )}
                 </TableBody>
