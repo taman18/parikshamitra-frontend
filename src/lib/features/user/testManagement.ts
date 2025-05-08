@@ -4,9 +4,9 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export const fetchUserTests = createAsyncThunk(
   "test/fetchUserTests",
-  async ({ accessToken, search }: { accessToken: string, search: string }) => {
+  async ({ accessToken, search, limit = 10 }: { accessToken: string, search: string, limit?: number }) => {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_DEV_BASE_URL}/${API_URIS.tests.getTests}?search=${search}`,
+      `${process.env.NEXT_PUBLIC_DEV_BASE_URL}/${API_URIS.tests.getTests}?search=${search}&limit=${limit}`,
       {
         headers: {
           "Content-Type": "application/json",

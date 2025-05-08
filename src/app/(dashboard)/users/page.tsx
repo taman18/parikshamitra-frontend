@@ -150,7 +150,6 @@ export default function UsersPage() {
       getUsers(); // initial call
     }
   }, [status, finalAccessToken]);
-  
 
   useEffect(() => {
     if (isFirstSearchRef.current) {
@@ -158,16 +157,15 @@ export default function UsersPage() {
       isFirstSearchRef.current = false;
       return;
     }
-  
+
     const debounceTimer = setTimeout(() => {
       getUsers(); // call with new searchQuery (including "")
     }, 400);
-  
+
     return () => {
       clearTimeout(debounceTimer);
     };
   }, [searchQuery]);
-  
 
   return (
     <div className="p-6 space-y-6">

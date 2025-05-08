@@ -4,6 +4,7 @@ import testReducer from './features/user/testManagement'
 import authReducer from './features/auth/auth.slice'
 import subjectReducer from './features/subjectManagement'
 import classReducer from './features/classManagement'
+import dashboardReducer from './features/dashboard/dashboard.slice'
 
 export const makeStore = () => {
   return configureStore({
@@ -13,6 +14,7 @@ export const makeStore = () => {
       auth: authReducer,
       subject: subjectReducer,
       class:classReducer,
+      dashboard: dashboardReducer
     },
   })
 }

@@ -1,3 +1,4 @@
+
 export const STATUS = {
     ACTIVE: "active",
     INACTIVE: "inactive",
@@ -18,7 +19,29 @@ export const API_URIS = {
     users: {
         getAllUsers: 'admin/user/all-users',
         updateUserStatus: 'admin/user/update-status'
+    },
+    dashboard: {
+        getTilesInfo: 'admin/user/get-dashboard-tiles-info'
     }
 }
 
 export const ADMIN_USER_ID = "6819df636aa58e49ccc03eaa"
+
+export const RANGES = [
+    {
+      value: "day",
+      label: "Day",
+    },
+    {
+      value: "week",
+      label: "Week",
+    },
+    {
+      value: "month",
+      label: "Month",
+    },
+    {
+      value: "year",
+      label: "Year",
+    },
+  ];

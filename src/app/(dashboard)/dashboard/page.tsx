@@ -2,26 +2,46 @@
 import { Card, CardContent } from "@/components/ui/card"
 // import { BarChart, LineChart } from "@/components/ui/chart"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { fetchTilesInfo } from "@/lib/features/dashboard/dashboard.slice"
+import { useAppDispatch, useAppSelector } from "@/lib/hooks"
 import { Users, FileText, BarChart3, TrendingUp } from "lucide-react"
+import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
+import { RootState } from "@/lib/store"
+import { RANGES } from "@/lib/constant"
+import { fetchUserTests } from "@/lib/features/user/testManagement"
+import { convertToDateFormat } from "@/lib/utils"
 
 export default function DashboardPage() {
-  // Sample data for charts
-  const barChartData = [
-    { name: "Easy", value: 75 },
-    { name: "Medium", value: 65 },
-    { name: "Hard", value: 55 },
-  ]
+  const dispatch = useAppDispatch();
+  const {data: session} = useSession();
+  const accessTokenSelector = useAppSelector(
+    (state: RootState) => state.auth.accessToken
+  )
+  const accessToken = accessTokenSelector ?? session?.user?.accessToken;
+  const tiles = useAppSelector(
+    (state: RootState) => state.dashboard.tiles
+  )
+  const recentTests = useAppSelector(
+    (state: RootState) => state.test.testsListing
+  )
+  const [range, setRange] = useState("day");
 
-  const lineChartData = [
-    { name: "Jan", value: 65 },
-    { name: "Feb", value: 59 },
-    { name: "Mar", value: 80 },
-    { name: "Apr", value: 81 },
-    { name: "May", value: 56 },
-    { name: "Jun", value: 55 },
-    { name: "Jul", value: 40 },
-  ]
+  const fetchTilesData = async() => {
+    await dispatch(fetchTilesInfo({accessToken, range}));
+  }
 
+  const fetchRecentTests = async() => {
+    await dispatch(fetchUserTests({accessToken, search: "", limit: 5}));
+  }
+
+  useEffect(() => {
+    if (accessToken) {
+      fetchTilesData();
+      fetchRecentTests();
+    }
+  },[accessToken, range]);
+  
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -29,10 +49,11 @@ export default function DashboardPage() {
         <div className="flex items-center gap-2">
           <Tabs defaultValue="day">
             <TabsList>
-              <TabsTrigger value="day">Day</TabsTrigger>
-              <TabsTrigger value="week">Week</TabsTrigger>
-              <TabsTrigger value="month">Month</TabsTrigger>
-              <TabsTrigger value="year">Year</TabsTrigger>
+              {RANGES.map((range) => (
+                <TabsTrigger className="cursor-pointer" key={range.value} value={range.value} onClick={() => setRange(range.value)}>
+                  {range.label}
+                </TabsTrigger>
+              ))}
             </TabsList>
           </Tabs>
         </div>
@@ -44,7 +65,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Users</p>
-                <h3 className="text-2xl font-bold mt-1">5,000</h3>
+                <h3 className="text-2xl font-bold mt-1">{tiles.totalUsers}</h3>
                 <p className="text-xs text-green-500 mt-1">+12% from last month</p>
               </div>
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -59,7 +80,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Tests Given</p>
-                <h3 className="text-2xl font-bold mt-1">12,000</h3>
+                <h3 className="text-2xl font-bold mt-1">{tiles.totalTestTaken}</h3>
                 <p className="text-xs text-green-500 mt-1">+8% from last month</p>
               </div>
               <div className="h-12 w-12 rounded-full bg-blue-500/10 flex items-center justify-center">
@@ -74,7 +95,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Average Score (All Tests)</p>
-                <h3 className="text-2xl font-bold mt-1">68.4%</h3>
+                <h3 className="text-2xl font-bold mt-1">{tiles.averageScore}</h3>
                 <p className="text-xs text-red-500 mt-1">-2% from last month</p>
               </div>
               <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center">
@@ -84,7 +105,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        {/* <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -97,7 +118,7 @@ export default function DashboardPage() {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -151,14 +172,14 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <tr key={i} className="border-b hover:bg-muted/50">
-                      <td className="py-3 px-4">TEST-{1000 + i}</td>
-                      <td className="py-3 px-4">Mathematics</td>
-                      <td className="py-3 px-4">Class {6 + (i % 6)}</td>
-                      <td className="py-3 px-4">{10 + i * 5}</td>
-                      <td className="py-3 px-4">{60 + i * 3}%</td>
-                      <td className="py-3 px-4">2023-04-{10 + i}</td>
+                  {recentTests.map((tests) => (
+                    <tr key={tests._id} className="border-b hover:bg-muted/50">
+                      <td className="py-3 px-4">{tests._id}</td>
+                      <td className="py-3 px-4">{tests.subjectName}</td>
+                      <td className="py-3 px-4">{tests.className}</td>
+                      <td className="py-3 px-4">{tests.totalQuestions}</td>
+                      <td className="py-3 px-4">{tests.avgScore}%</td>
+                      <td className="py-3 px-4">{convertToDateFormat(tests.createdAt)}</td>
                     </tr>
                   ))}
                 </tbody>

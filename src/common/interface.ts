@@ -50,6 +50,7 @@ export interface ApiResponseClassInterface extends ClassInterface{
     subjectName: string;
     totalMarks: number;
     updatedAt: string;
+    className: string;
   }
 
   // TestState — Redux state structure
