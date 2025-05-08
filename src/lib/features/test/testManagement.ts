@@ -50,11 +50,18 @@ export const getTestsByUserId = createAsyncThunk(
 )
 
 const initialState: TestState = {
-  testsListing: [],
-  totalTests: 0,
-  totalPages: 0,
-  loading: false,
-  error: null,
+  getTests: {
+    testsListing: [],
+    totalTests: 0,
+    totalPages: 0,
+    loading: false,
+    error: null,
+  },
+  getTestsByUserId: {
+    testsListing: [],
+    loading: false,
+    error: null
+  }
 };
 
 export const testSlice = createSlice({
@@ -62,28 +69,42 @@ export const testSlice = createSlice({
   initialState,
   reducers: {
     setUpdatedTests: (state, action: PayloadAction<TestState>) => {
-      state.testsListing = action.payload.testsListing.filter(
-        (test) => !state.testsListing.find((t) => t._id === test._id)
+      state.getTests.testsListing = action.payload.getTests.testsListing.filter(
+        (test) => !state.getTests.testsListing.find((t) => t._id === test._id)
       );
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchUserTests.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        state.getTests.loading = true;
+        state.getTests.error = null;
       })
       .addCase(fetchUserTests.fulfilled, (state, action) => {
-        state.loading = false;
+        state.getTests.loading = false;
         const { tests } = action.payload;
-        state.testsListing = tests.formattedTests;
-        state.totalTests = tests.totalTests;
-        state.totalPages = tests.totalPages;
+        state.getTests.testsListing = tests.formattedTests;
+        state.getTests.totalTests = tests.totalTests;
+        state.getTests.totalPages = tests.totalPages;
       })
       .addCase(fetchUserTests.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message ?? "Failed to fetch tests";
-      });
+        state.getTests.loading = false;
+        state.getTests.error = action.error.message ?? "Failed to fetch tests";
+      })
+      .addCase(getTestsByUserId.pending, (state) => {
+        state.getTestsByUserId.loading = true;
+        state.getTestsByUserId.error = null;
+      })
+      .addCase(getTestsByUserId.fulfilled, (state, action) => {
+        console.log("action.payload", action.payload);
+        state.getTestsByUserId.loading = false;
+        const { tests } = action.payload;
+        state.getTestsByUserId.testsListing = tests;
+      })
+      .addCase(getTestsByUserId.rejected, (state, action) => {
+        state.getTestsByUserId.loading = false;
+        state.getTestsByUserId.error = action.error.message ?? "Failed to fetch tests";
+      })
   },
 });
 

@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Eye, MoreHorizontal, Search, Share2, Trash2 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { deleteTest, fetchUserTests } from "@/lib/features/user/testManagement";
+import { deleteTest, fetchUserTests } from "@/lib/features/test/testManagement";
 import { useSession } from "next-auth/react";
 import { RootState } from "@/lib/store";
 import { toast } from "react-toastify";
@@ -43,23 +43,25 @@ export default function TestsOverviewPage() {
   const [currentTest, setCurrentTest] = useState<Test | null>(null);
   const dispatch = useAppDispatch();
   const hasFetchedRef = useRef(false);
-  const [tests, setTests] = useState<Test[]>([]);
   const accessTokenSelector = useAppSelector(
     (state: RootState) => state.auth.accessToken
   );
+  const testDetails = useAppSelector((state: RootState) => state.test.getTests);
+  const tests = testDetails.testsListing;
   const { data: session, status } = useSession();
   const isFirstSearchRef = useRef(true);
 
-  const finalAccessToken = accessTokenSelector ?? session?.user?.accessToken ?? "";
+  const finalAccessToken =
+    accessTokenSelector ?? session?.user?.accessToken ?? "";
+    
   const fetchUserTestsDetails = async () => {
     try {
-      const res = await dispatch(
+      await dispatch(
         fetchUserTests({
           accessToken: accessTokenSelector ?? session?.user?.accessToken ?? "",
           search: searchQuery.trim(),
         })
       ).unwrap();
-      setTests(res.tests.formattedTests);
     } catch (error) {
       console.error(error);
     }
@@ -82,13 +84,13 @@ export default function TestsOverviewPage() {
       isFirstSearchRef.current = false;
       return;
     }
-   const debounceTimer = setTimeout(() => {
+    const debounceTimer = setTimeout(() => {
       fetchUserTestsDetails();
-   }, 400);
+    }, 400);
 
-   return () => {
-     clearTimeout(debounceTimer);
-   }
+    return () => {
+      clearTimeout(debounceTimer);
+    };
   }, [searchQuery]);
 
   const viewTestDetails = (test: Test) => {
@@ -118,10 +120,6 @@ export default function TestsOverviewPage() {
 
       if (res.success) {
         toast.success("Test deleted successfully");
-        const updatedTestList = tests.filter(
-          (test) => test._id !== currentTest._id
-        );
-        setTests(updatedTestList);
         fetchUserTestsDetails();
       }
       setIsDeleteDialogOpen(false);
@@ -166,7 +164,7 @@ export default function TestsOverviewPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {tests.length > 0 ? (
+                {testDetails.testsListing.length > 0 ? (
                   tests.map((test: Test) => (
                     <TableRow key={test._id}>
                       <TableCell>{test._id}</TableCell>

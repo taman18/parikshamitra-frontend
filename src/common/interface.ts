@@ -51,15 +51,23 @@ export interface ApiResponseClassInterface extends ClassInterface {
     totalMarks: number;
     updatedAt: string;
     className: string;
+    isCompleted: boolean;
   }
 
 // TestState — Redux state structure
 export interface TestState {
-  testsListing: Test[];
-  totalTests: number;
-  totalPages: number;
-  loading: boolean;
-  error: string | null;
+  getTests: {
+    testsListing: Test[];
+    totalTests: number;
+    totalPages: number;
+    loading: boolean;
+    error: string | null;
+  },
+  getTestsByUserId: {
+    testsListing: Test[];
+    loading: boolean;
+    error: string | null;
+  }
 }
 
 export interface QuestionInterface {

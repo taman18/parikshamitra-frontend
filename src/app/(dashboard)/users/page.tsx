@@ -43,8 +43,10 @@ import {
 } from "@/lib/features/user/userManagement";
 import { useSession } from "next-auth/react";
 import { RootState } from "@/lib/store";
-import { getTestsByUserId } from "@/lib/features/user/testManagement";
+import { getTestsByUserId } from "@/lib/features/test/testManagement";
 import { convertToDateFormat, convertToTimeFormat } from "@/lib/utils";
+import { toast } from "react-toastify";
+
 interface User {
   _id: string;
   userName: string;
@@ -79,33 +81,20 @@ export interface Test {
   __v: number;
 }
 
-interface TestInfo {
-  _id: string;
-  testName: string;
-  difficultyLevel: string;
-  totalQuestions: number;
-  subjectName: string;
-  className: string;
-  totalMarks: number;
-  marksObtained: number;
-  createdAt: string;
-  updatedAt: string;
-  isCompleted: boolean;
-}
-
 export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isUserDetailsOpen, setIsUserDetailsOpen] = useState<boolean>(false);
   const [isBlockDialogOpen, setIsBlockDialogOpen] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [testInfoByUserId, setTestInfoByUserId] = useState<TestInfo[]>([]);
   const dispatch = useAppDispatch();
   const accessTokenSelector = useAppSelector(
     (state: RootState) => state.auth.accessToken
   );
   const blockUserIsLoading = useAppSelector(
-    (state: RootState) => state.user.loading
+    (state: RootState) => state.user.updateStatus.loading
   );
+  const testDetails = useAppSelector((state: RootState) => state.test.getTestsByUserId);
+  const { testsListing } = testDetails;
   const [users, setUsers] = useState<User[]>([]);
   const { data: session, status } = useSession();
   const finalAccessToken =
@@ -139,28 +128,12 @@ export default function UsersPage() {
 
   const getTestsInfoByUserId = async (userId: string) => {
     try {
-      const response = await dispatch(
+      await dispatch(
         getTestsByUserId({
           id: userId,
           accessToken: finalAccessToken ?? "",
         })
       ).unwrap();
-      const { tests } = response;
-      const formattedTests = tests.map((test: Test) => ({
-        _id: test._id,
-        testName: test.testName,
-        difficultyLevel: test.difficultyLevel,
-        totalQuestions: test.totalQuestions,
-        subjectId: test.subjectId.subjectName,
-        className: test.classId.className,
-        totalMarks: test.totalMarks,
-        marksObtained: test.marksObtained,
-        createdAt: test.createdAt,
-        updatedAt: test.updatedAt,
-        isCompleted: test.isCompleted,
-      }));
-
-      setTestInfoByUserId(formattedTests);
     } catch (error) {
       console.error(error);
     }
@@ -202,6 +175,11 @@ export default function UsersPage() {
           accessToken,
         })
       ).unwrap();
+      if (currentUser.status === "active") {
+        toast.success("User blocked successfully");
+      } else {
+        toast.success("User unblocked successfully");
+      }
       setIsBlockDialogOpen(false);
       await getUsers();
     } catch (error) {
@@ -393,56 +371,58 @@ export default function UsersPage() {
               </div>
 
               <div className="pt-4 border-t">
-                <h4 className="text-sm font-semibold mb-2">Recent Activity</h4>
-                {testInfoByUserId.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No recent activity found.
-                  </p>
-                ) : (
-                  testInfoByUserId.map((test) => (
-                    <div
-                      key={test._id}
-                      className="space-y-1 border-b pb-2 mb-2"
-                    >
-                      <p className="text-sm font-medium">
-                        {test.isCompleted ? "Completed" : "Pending"}{" "}
-                        <span className="font-semibold">{test.testName}</span>{" "}
-                        on {convertToDateFormat(test.createdAt)} at{" "}
-                        {convertToTimeFormat(test.createdAt)}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Subject:{" "}
-                        <span className="font-medium">
-                          {test.subjectName}
-                        </span>{" "}
-                        | Class:{" "}
-                        <span className="font-medium">
-                          {test.className}
-                        </span>
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Difficulty:{" "}
-                        <span className="capitalize">
-                          {test.difficultyLevel}
-                        </span>{" "}
-                        | Marks:{" "}
-                        <span className="font-medium">
-                          {test.marksObtained}/{test.totalMarks}
-                        </span>
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Questions: {test.totalQuestions} | Status:{" "}
-                        <span
-                          className={
-                            test.isCompleted ? "text-green-600" : "text-red-600"
-                          }
-                        >
-                          {test.isCompleted ? "Completed" : "Pending"}
-                        </span>
-                      </p>
-                    </div>
-                  ))
-                )}
+                <h4 className="text-sm font-semibold mb-2 text-center">Recent Activity</h4>
+                <div className=" max-h-[20vh] overflow-y-auto">
+                  {testsListing.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No recent activity found.
+                    </p>
+                  ) : (
+                    testsListing.map((test) => (
+                      <div
+                        key={test._id}
+                        className="space-y-1 border-b pb-2 mb-2"
+                      >
+                        <p className="text-sm font-medium">
+                          {test.isCompleted ? "Completed" : "Pending"}{" "}
+                          <span className="font-semibold">{test.testName}</span>{" "}
+                          on {convertToDateFormat(test.createdAt)} at{" "}
+                          {convertToTimeFormat(test.createdAt)}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Subject:{" "}
+                          <span className="font-medium">
+                            {test.subjectName}
+                          </span>{" "}
+                          | Class:{" "}
+                          <span className="font-medium">{test.className}</span>
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Difficulty:{" "}
+                          <span className="capitalize">
+                            {test.difficultyLevel}
+                          </span>{" "}
+                          | Marks:{" "}
+                          <span className="font-medium">
+                            {test.marksObtained}/{test.totalMarks}
+                          </span>
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Questions: {test.totalQuestions} | Status:{" "}
+                          <span
+                            className={
+                              test.isCompleted
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }
+                          >
+                            {test.isCompleted ? "Completed" : "Pending"}
+                          </span>
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           )}

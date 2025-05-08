@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit'
 import userReducer from './features/user/userManagement'
-import testReducer from './features/user/testManagement'
+import testReducer from './features/test/testManagement'
 import authReducer from './features/auth/auth.slice'
 import subjectReducer from './features/subjectManagement'
 import classReducer from './features/classManagement'

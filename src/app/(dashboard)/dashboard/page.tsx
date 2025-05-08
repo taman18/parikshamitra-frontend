@@ -9,8 +9,15 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { RootState } from "@/lib/store";
 import { RANGES } from "@/lib/constant";
-import { fetchUserTests } from "@/lib/features/user/testManagement";
+import { fetchUserTests } from "@/lib/features/test/testManagement";
 import { convertToDateFormat } from "@/lib/utils";
+import {
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
@@ -21,7 +28,7 @@ export default function DashboardPage() {
   const accessToken = accessTokenSelector ?? session?.user?.accessToken;
   const tiles = useAppSelector((state: RootState) => state.dashboard.tiles);
   const recentTests = useAppSelector(
-    (state: RootState) => state.test.testsListing
+    (state: RootState) => state.test.getTests.testsListing
   );
   const [range, setRange] = useState("day");
 
@@ -182,34 +189,68 @@ export default function DashboardPage() {
             <h3 className="text-lg font-semibold mb-4">Recent Tests</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-medium">Test ID</th>
-                    <th className="text-left py-3 px-4 font-medium">Subject</th>
-                    <th className="text-left py-3 px-4 font-medium">Class</th>
-                    <th className="text-left py-3 px-4 font-medium">
+                <TableHeader>
+                  <TableRow className="border-b">
+                    <TableHead className="text-left py-3 px-4 font-medium">
+                      Test ID
+                    </TableHead>
+                    <TableHead className="text-left py-3 px-4 font-medium">
+                      Test Name
+                    </TableHead>
+                    <TableHead className="text-left py-3 px-4 font-medium">
+                      User Name
+                    </TableHead>
+                    <TableHead className="text-left py-3 px-4 font-medium">
+                      Subject
+                    </TableHead>
+                    <TableHead className="text-left py-3 px-4 font-medium">
+                      Class
+                    </TableHead>
+                    <TableHead className="text-left py-3 px-4 font-medium">
                       Questions
-                    </th>
+                    </TableHead>
                     <th className="text-left py-3 px-4 font-medium">
                       Avg. Score
                     </th>
                     <th className="text-left py-3 px-4 font-medium">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentTests.map((tests) => (
-                    <tr key={tests._id} className="border-b hover:bg-muted/50">
-                      <td className="py-3 px-4">{tests._id}</td>
-                      <td className="py-3 px-4">{tests.subjectName}</td>
-                      <td className="py-3 px-4">{tests.className}</td>
-                      <td className="py-3 px-4">{tests.totalQuestions}</td>
-                      <td className="py-3 px-4">{tests.avgScore}%</td>
-                      <td className="py-3 px-4">
-                        {convertToDateFormat(tests.createdAt)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recentTests.length > 0 ? (
+                    recentTests.map((tests) => (
+                      <TableRow key={tests._id} className="border-b">
+                        <TableCell className="py-3 px-4">{tests._id}</TableCell>
+                        <TableCell className="py-3 px-4">
+                          {tests.testName}
+                        </TableCell>
+                        <TableCell className="py-3 px-4">
+                          {tests.createdBy}
+                        </TableCell>
+                        <TableCell className="py-3 px-4">
+                          {tests.subjectName}
+                        </TableCell>
+                        <TableCell className="py-3 px-4">
+                          {tests.className}
+                        </TableCell>
+                        <TableCell className="py-3 px-4">
+                          {tests.totalQuestions}
+                        </TableCell>
+                        <TableCell className="py-3 px-4">
+                          {tests.avgScore}%
+                        </TableCell>
+                        <TableCell className="py-3 px-4">
+                          {convertToDateFormat(tests.createdAt)}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={10} className="h-24 text-center">
+                        No tests found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
               </table>
             </div>
           </CardContent>

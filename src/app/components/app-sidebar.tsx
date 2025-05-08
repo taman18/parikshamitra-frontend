@@ -18,7 +18,7 @@ export function AppSidebar() {
   const menuItems = [
     {
       title: "Dashboard",
-      href: "/",
+      href: "/dashboard",
       icon: BarChart3,
     },
     {
@@ -51,11 +51,11 @@ export function AppSidebar() {
       href: "/tests",
       icon: FileText,
     },
-    {
-      title: "Settings",
-      href: "/settings",
-      icon: Settings,
-    },
+    // {
+    //   title: "Settings",
+    //   href: "/settings",
+    //   icon: Settings,
+    // },
     {
       title: "Logout",
       href: "/logout",
