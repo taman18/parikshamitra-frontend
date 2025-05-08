@@ -32,11 +32,15 @@ export const filteredSubjects = async (
   export const fetchQuestions= async (
     dispatch: AppDispatch,
     accessToken: string,
+    classId:string,
+    subjectId:string,
+    difficultyLevel:string,
     page:number,
     limit:number
   ) => {
     try {
-      await dispatch(getQuestions({ accessToken: accessToken ,page,limit}));
+      console.log("-----------")
+      await dispatch(getQuestions({ accessToken ,classId,subjectId,difficultyLevel,page,limit}));
     } catch (err) {
       console.error("Error fetching classes:", err);
     }
