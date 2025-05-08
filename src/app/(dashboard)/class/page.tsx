@@ -31,14 +31,11 @@ export default function ClassesPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false)
   const [currentClass, setCurrentClass] = useState<ClassInterface | null>(null)
   const handleAddClass = async() => {
-    console.log("-----");
     if (!category || !className.trim()) {
       console.log("Class name or category missing")
       return
     }
-    console.log("session?.data?.user?.accessToken",session?.data?.user?.accessToken)
-    const addedSubject = await dispatch(addClass({accessToken:session?.data?.user?.accessToken,body:{className:className,category:category}}));
-    console.log("Added subject ",addedSubject);
+    await dispatch(addClass({accessToken:session?.data?.user?.accessToken,body:{className:className,category:category}}));
     setClassName("")
     setCategory("")
   }
@@ -66,12 +63,8 @@ export default function ClassesPage() {
   }
 
   const handleDeleteClass = async() => {
-    console.log("currentClass",currentClass)
     if (!currentClass) return
-    console.log(currentClass)
-    console.log("00000000")
-    const deletedClass =await dispatch(deleteClass({accessToken:session?.data?.user?.accessToken,classId:currentClass.classId}))
-    console.log("deletedClass",deletedClass);
+    await dispatch(deleteClass({accessToken:session?.data?.user?.accessToken,classId:currentClass.classId}))
     setIsDeleteDialogOpen(false)
     setCurrentClass(null)
   }

@@ -14,8 +14,8 @@ export interface SubjectState {
   error: string | null;
 }
 
-export interface ApiResponseSubjectInterface extends SubjectState{
-    _id:string;
+export interface ApiResponseSubjectInterface extends ClassInterface {
+  _id: string;
 }
 
 // ClassInterface — describes a single class
@@ -33,30 +33,55 @@ export interface ClassState {
   error: string | null;
 }
 
-export interface ApiResponseClassInterface extends ClassInterface{
-    _id:string;
+export interface ApiResponseClassInterface extends ClassInterface {
+  _id: string;
 }
 
-  // Test — describes a single test
-  export interface Test {
-    _id: string;
-    testName: string;
-    createdBy: string;
-    totalQuestions: number;
-    difficultyLevel: string;
-    avgScore: number;
-    createdAt: string;
-    marksObtained: number;
-    subjectName: string;
-    totalMarks: number;
-    updatedAt: string;
-  }
+// Test — describes a single test
+export interface Test {
+  _id: string;
+  testName: string;
+  createdBy: string;
+  totalQuestions: number;
+  difficultyLevel: string;
+  avgScore: number;
+  createdAt: string;
+  marksObtained: number;
+  subjectName: string;
+  totalMarks: number;
+  updatedAt: string;
+}
 
-  // TestState — Redux state structure
-  export interface TestState {
-    testsListing: Test[];
-    totalTests: number;
-    totalPages: number;
-    loading: boolean;
-    error: string | null;
-  }
+// TestState — Redux state structure
+export interface TestState {
+  testsListing: Test[];
+  totalTests: number;
+  totalPages: number;
+  loading: boolean;
+  error: string | null;
+}
+
+export interface QuestionInterface {
+  questionId?: string;
+  subjectId: string;
+  subjectName?: string;
+  classId: string;
+  className?: string;
+  difficultyLevel: string;
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  totalQuestionsByClassAndSubject?:number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface QuestionState {
+  data: QuestionInterface[];
+  loading: boolean;
+  error: string | null;
+}
+
+export interface ApiResponseQuestionInterface extends QuestionInterface{
+    _id:string,
+}
