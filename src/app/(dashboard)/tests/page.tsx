@@ -254,7 +254,7 @@ export default function TestsOverviewPage() {
                         Average Score
                       </div>
                       <div className="text-2xl font-bold">
-                        {currentTest.avgScore ?? 0}
+                        {Number(currentTest.avgScore ?? 0).toFixed(0)}%
                       </div>
                     </div>
                   </CardContent>

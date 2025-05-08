@@ -34,6 +34,21 @@ export const deleteTest = createAsyncThunk(
   }
 )
 
+export const getTestsByUserId = createAsyncThunk(
+  "test/getTestsByUserId",
+  async ({ id, accessToken }: { id: string; accessToken: string }) => {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_DEV_BASE_URL}/${API_URIS.tests.getTestsInfoByUserId}/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        authorization: `Bearer ${accessToken}`,
+      },
+    });
+    const data = await response.json();
+    return data;
+  }
+)
+
 const initialState: TestState = {
   testsListing: [],
   totalTests: 0,
