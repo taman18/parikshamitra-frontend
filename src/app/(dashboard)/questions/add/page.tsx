@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
@@ -8,6 +8,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
+import { RootState } from "@/lib/store"
+import { useAppDispatch, useAppSelector } from "@/lib/hooks"
+import { useSession } from "next-auth/react"
+import { fetchSubjects, filteredSubjects } from "@/utils/helper"
+import { toast } from "react-toastify"
+import { addQuestion } from "@/lib/features/questionManagement"
 // import { useToast } from "@/components/ui/use-toast"
 
 export default function AddQuestionsPage() {
@@ -18,55 +24,47 @@ export default function AddQuestionsPage() {
   const [question, setQuestion] = useState<string>("")
   const [options, setOptions] = useState<string[]>(["", "", "", ""])
   const [correctAnswer, setCorrectAnswer] = useState<string>("")
-
-  // Sample data
-  const classes = ["Class 6", "Class 7", "Class 8", "Class 9", "Class 10", "Class 11", "Class 12"]
-
-  const subjects: Record<string, string[]> = {
-    "Class 6": ["Mathematics", "Science", "English", "Social Studies"],
-    "Class 7": ["Mathematics", "Science", "English", "Social Studies", "Computer Science"],
-    "Class 8": ["Mathematics", "Science", "English", "Social Studies", "Computer Science"],
-    "Class 9": ["Mathematics", "Physics", "Chemistry", "Biology", "English", "History"],
-    "Class 10": ["Mathematics", "Physics", "Chemistry", "Biology", "English", "History"],
-    "Class 11": ["Mathematics", "Physics", "Chemistry", "Biology", "Computer Science", "Economics"],
-    "Class 12": ["Mathematics", "Physics", "Chemistry", "Biology", "Computer Science", "Economics"],
-  }
-
+  const classes = useAppSelector((state: RootState) => state.class.data);
+  const subjects = useAppSelector((state: RootState) => state.subject.data);
+  const questionsList = useAppSelector((state: RootState) => state.question.data);
+  console.log("QuestionList",questionsList)
   const difficulties = ["Easy", "Medium", "Hard"]
-
+  const { data: session } = useSession();
+  const dispatch = useAppDispatch();
+  console.log("Classes",classes);
+  console.log("Subjects",subjects);
+  console.log("selectedSubject",selectedSubject)
+    useEffect(()=>{
+      if (session?.user?.accessToken) {
+        if(selectedClass){
+          filteredSubjects(dispatch,session?.user?.accessToken,selectedClass,1,10);
+        }
+      }
+    },[selectedClass,dispatch, session?.user?.accessToken])
+    
   const handleOptionChange = (index: number, value: string) => {
     const newOptions = [...options]
     newOptions[index] = value
     setOptions(newOptions)
   }
+  console.log("Question",question)
+  console.log("options",options)
+  console.log("correctAnswer",correctAnswer)
 
-  const handleAddQuestion = () => {
+  const handleAddQuestion = async() => {
     // Validate form
     if (!selectedClass || !selectedSubject || !selectedDifficulty || !question.trim() || !correctAnswer) {
-    //   toast({
-    //     title: "Error",
-    //     description: "Please fill in all required fields",
-    //     variant: "destructive",
-    //   })
+      console.log("Please enter all fields")
       return
     }
 
     // Check if all options are filled
     if (options.some((option) => !option.trim())) {
-    //   toast({
-    //     title: "Error",
-    //     description: "Please fill in all options",
-    //     variant: "destructive",
-    //   })
+      console.log("Please write all options")
       return
     }
 
-    // In a real app, you would save the question to a database here
-    // toast({
-    //   title: "Success",
-    //   description: "Question added successfully",
-    // })
-
+    await dispatch(addQuestion({accessToken:session?.user?.accessToken,body:{classId:selectedClass,subjectId:selectedSubject,difficultyLevel:selectedDifficulty,question:question,options:options,correctAnswer:correctAnswer}}))
     // Reset form
     setQuestion("")
     setOptions(["", "", "", ""])
@@ -98,8 +96,8 @@ export default function AddQuestionsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {classes.map((cls) => (
-                      <SelectItem key={cls} value={cls}>
-                        {cls}
+                      <SelectItem key={cls?.classId} value={cls?.classId||""}>
+                        {cls?.className}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -114,9 +112,9 @@ export default function AddQuestionsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {selectedClass &&
-                      subjects[selectedClass]?.map((subject) => (
-                        <SelectItem key={subject} value={subject}>
-                          {subject}
+                      subjects?.map((subject) => (
+                        <SelectItem key={subject?.subjectId} value={subject?.subjectId||""}>
+                          {subject?.subjectName}
                         </SelectItem>
                       ))}
                   </SelectContent>

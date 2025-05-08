@@ -1,4 +1,8 @@
-import { ApiResponseSubjectInterface, SubjectInterface, SubjectState } from "@/common/interface";
+import {
+  ApiResponseSubjectInterface,
+  SubjectInterface,
+  SubjectState,
+} from "@/common/interface";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 const initialState: SubjectState = {
@@ -30,7 +34,7 @@ export const addSubject = createAsyncThunk(
         body: JSON.stringify(body),
       }
     );
-    const addSubjectApiJsonResponse = addSubjectApiResponse.json();
+    const addSubjectApiJsonResponse = await addSubjectApiResponse.json();
     return addSubjectApiJsonResponse;
   }
 );
@@ -64,15 +68,15 @@ export const editSubject = createAsyncThunk(
   "editSubject",
   async ({
     accessToken,
-    classId,
+    subjectId,
     body,
   }: {
     accessToken: string;
-    classId: string | undefined;
-    body: { className: string; category: string };
+    subjectId: string | undefined;
+    body: SubjectInterface;
   }) => {
-    const editClassApiResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/class/edit-class?classId=${classId}`,
+    const editSubjectApiResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/subject/edit-subject?subjectId=${subjectId}`,
       {
         method: "PUT",
         headers: {
@@ -82,14 +86,14 @@ export const editSubject = createAsyncThunk(
         body: JSON.stringify(body),
       }
     );
-    const editClassApiJsonResponse = await editClassApiResponse.json();
-    console.log("editClassApiJsonResponse", editClassApiJsonResponse);
+    const editSubjectApiJsonResponse = await editSubjectApiResponse.json();
     return {
-      editClassApiJsonResponse: editClassApiJsonResponse?.data,
-      editClassId: classId,
+      editSubjectApiJsonResponse: editSubjectApiJsonResponse?.data,
+      editSubjectId: subjectId,
     };
   }
 );
+
 export const getSubjects = createAsyncThunk(
   "getSubjects",
   async ({ accessToken }: { accessToken: string }) => {
@@ -107,6 +111,24 @@ export const getSubjects = createAsyncThunk(
     return getSubjectApiJsonResponse;
   }
 );
+
+export const filterSubjects = createAsyncThunk(
+  "filterSubjects",
+  async({accessToken,classId,limit,page}:{accessToken:string,classId:string,page:number,limit:number})=>{
+    const filteredSubjectApiResponse = await fetch(`${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/subject/filter-subject?classId=${classId}&&page=${page}&&limit=${limit}`,
+      {
+        method:"GET",
+        headers:{
+          "Content-Type":"application/json",
+          authorization : `Bearer ${accessToken}`
+        },
+      }
+    )
+    const filteredSubjectApiJsonResponse = await filteredSubjectApiResponse.json();
+    console.log(filteredSubjectApiJsonResponse);
+    return filteredSubjectApiJsonResponse
+  }
+)
 
 export const subjectSlice = createSlice({
   name: "Subject",
@@ -148,24 +170,72 @@ export const subjectSlice = createSlice({
         state.error = action.error.message || "Failed to delete class.";
       })
 
+      .addCase(editSubject.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(editSubject.fulfilled, (state, action) => {
+        state.loading = false;
+        const updatedData = action.payload.editSubjectApiJsonResponse;
+        state.data = state.data.map((sub) => {
+          if (action.payload.editSubjectId === sub.subjectId) {
+            const { _id, ...rest } = updatedData;
+            console.log("_id : ",_id,"....rest")
+            return {
+              subjectId: _id,
+              ...rest,
+            };
+          }
+          return sub;
+        });
+      })
+      .addCase(editSubject.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to delete class.";
+      })
+
       .addCase(getSubjects.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(getSubjects.fulfilled, (state, action) => {
         state.loading = false;
-        const transformedData: SubjectInterface[] = action?.payload?.data?.result?.map(
-          (cls: ApiResponseSubjectInterface) => {
-            const { _id, ...rest } = cls;
-            return {
-              subjectId: _id,
-              ...rest,
-            };
-          }
-        );
+        const transformedData: SubjectInterface[] =
+          action?.payload?.data?.result?.map(
+            (cls: ApiResponseSubjectInterface) => {
+              const { _id, ...rest } = cls;
+              return {
+                subjectId: _id,
+                ...rest,
+              };
+            }
+          );
         state.data = transformedData;
       })
       .addCase(getSubjects.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to delete class.";
+      })
+
+      .addCase(filterSubjects.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(filterSubjects.fulfilled, (state, action) => {
+        state.loading = false;
+        const transformedData: SubjectInterface[] =
+          action?.payload?.data?.result?.map(
+            (cls: ApiResponseSubjectInterface) => {
+              const { _id, ...rest } = cls;
+              return {
+                subjectId: _id,
+                ...rest,
+              };
+            }
+          );
+        state.data = transformedData;
+      })
+      .addCase(filterSubjects.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || "Failed to delete class.";
       });
