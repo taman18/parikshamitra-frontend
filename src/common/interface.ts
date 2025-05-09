@@ -102,3 +102,12 @@ export interface ApiResponseQuestionInterface extends QuestionInterface{
       className:string
     }
 }
+
+export interface QuestionFilterStateInterface{
+  classId:string,
+  subjectId:string,
+  difficultyLevel:string,
+  searchQuestion:string,
+  page:number,
+  limit:number,
+}

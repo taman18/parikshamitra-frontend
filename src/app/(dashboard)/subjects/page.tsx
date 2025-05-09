@@ -91,7 +91,6 @@ export default function SubjectsPage() {
   };
 
   const openEditDialog = (subject: SubjectInterface) => {
-    console.log("Subject", subject);
     setCurrentSubject(subject);
     setSelectedClass(subject?.classId);
     setSubjectName(subject?.subjectName);
@@ -143,8 +142,6 @@ export default function SubjectsPage() {
     // })
   };
 
-  console.log("subjectList ", subjectList);
-  console.log(selectedClassToFilter);
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">Subjects</h1>

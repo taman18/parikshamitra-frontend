@@ -80,7 +80,6 @@ export const editClass = createAsyncThunk(
       }
     );
     const editClassApiJsonResponse = await editClassApiResponse.json();
-    console.log("editClassApiJsonResponse",editClassApiJsonResponse);
     return {
       editClassApiJsonResponse: editClassApiJsonResponse?.data,
       editClassId: classId,
@@ -112,12 +111,10 @@ export const classSlice = createSlice({
       state,
       action: PayloadAction<ApiResponseClassInterface[]>
     ) {
-        console.log("ABC",action.payload)
       const transformedData: ClassInterface[] = action.payload.map((cls) => {
         const { _id, ...rest } = cls;
         return { ...rest, classId: _id };
       });
-      console.log("transformed data ",transformedData)
       state.data = transformedData;
     },
   },
@@ -164,7 +161,6 @@ export const classSlice = createSlice({
       .addCase(editClass.fulfilled, (state, action) => {
         state.loading = false;
         const updatedData = action.payload.editClassApiJsonResponse;
-        console.log("updatedData",updatedData)
         state.data = state.data.map((cls) => {
           if (action.payload.editClassId === cls.classId) {
             const {_id,...rest} = updatedData;

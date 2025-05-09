@@ -20,7 +20,6 @@ export const addQuestion = createAsyncThunk(
     accessToken: string;
     body: QuestionInterface;
   }) => {
-    console.log("BODY", body);
     const addQuestionApiResponse = await fetch(
       `${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/question/add-question`,
       {
@@ -36,7 +35,6 @@ export const addQuestion = createAsyncThunk(
       throw new Error("Failed to add question.");
     }
     const addQuestionApiJsonResponse = await addQuestionApiResponse.json();
-    console.log("addQuestionApiJsonResponse", addQuestionApiJsonResponse);
     return addQuestionApiJsonResponse;
   }
 );
@@ -119,7 +117,6 @@ export const getQuestions = createAsyncThunk(
     if (difficultyLevel) endUrl.append("difficultyLevel", difficultyLevel);
     endUrl.append("page", String(page));
     endUrl.append("limit", String(limit));
-    console.log("-----------");
     const getQuestionsApiResponse = await fetch(
       `${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/question/get-questions?${endUrl}`,
       {
@@ -131,7 +128,6 @@ export const getQuestions = createAsyncThunk(
       }
     );
     const getQuestionsApiJsonResponse = await getQuestionsApiResponse.json();
-    console.log("getQuestionsApiJsonResponse", getQuestionsApiJsonResponse);
     return getQuestionsApiJsonResponse;
   }
 );
@@ -165,7 +161,6 @@ export const subjectSlice = createSlice({
         state.loading = true;
       })
       .addCase(addQuestion.fulfilled, (state, action) => {
-        console.log("action.payload", action.payload);
         state.loading = false;
         const { _id, ...rest } = action.payload.data;
         state.data = [
@@ -175,7 +170,6 @@ export const subjectSlice = createSlice({
             ...rest,
           },
         ];
-        console.log("1234567890", state.data);
       })
       .addCase(addQuestion.rejected, (state, action) => {
         state.error = action.error.message || "Failed to add subject.";
