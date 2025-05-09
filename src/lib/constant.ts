@@ -14,7 +14,8 @@ export const API_URIS = {
     },
     tests: {
         getTests: 'admin/test/get-test',
-        deleteTest: 'admin/test/delete-test'
+        deleteTest: 'admin/test/delete-test',
+        getTestsInfoByUserId: 'admin/test/get-test-by-userId',
     },
     users: {
         getAllUsers: 'admin/user/all-users',

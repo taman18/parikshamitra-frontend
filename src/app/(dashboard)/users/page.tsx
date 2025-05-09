@@ -43,6 +43,10 @@ import {
 } from "@/lib/features/user/userManagement";
 import { useSession } from "next-auth/react";
 import { RootState } from "@/lib/store";
+import { getTestsByUserId } from "@/lib/features/test/testManagement";
+import { convertToDateFormat, convertToTimeFormat } from "@/lib/utils";
+import { toast } from "react-toastify";
+
 interface User {
   _id: string;
   userName: string;
@@ -52,6 +56,28 @@ interface User {
   averageScore: number;
   createdAt: string;
   updatedAt: string;
+  __v: number;
+}
+
+export interface Test {
+  _id: string;
+  userId: string;
+  testName: string;
+  difficultyLevel: string;
+  totalQuestions: number;
+  subjectId: {
+    _id: string;
+    subjectName: string;
+  };
+  classId: {
+    _id: string;
+    className: string;
+  };
+  totalMarks: number;
+  marksObtained: number;
+  isCompleted: boolean;
+  createdAt: string; // or Date if you parse it
+  updatedAt: string; // or Date
   __v: number;
 }
 
@@ -65,8 +91,10 @@ export default function UsersPage() {
     (state: RootState) => state.auth.accessToken
   );
   const blockUserIsLoading = useAppSelector(
-    (state: RootState) => state.user.loading
+    (state: RootState) => state.user.updateStatus.loading
   );
+  const testDetails = useAppSelector((state: RootState) => state.test.getTestsByUserId);
+  const { testsListing } = testDetails;
   const [users, setUsers] = useState<User[]>([]);
   const { data: session, status } = useSession();
   const finalAccessToken =
@@ -98,8 +126,22 @@ export default function UsersPage() {
     }
   };
 
+  const getTestsInfoByUserId = async (userId: string) => {
+    try {
+      await dispatch(
+        getTestsByUserId({
+          id: userId,
+          accessToken: finalAccessToken ?? "",
+        })
+      ).unwrap();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const viewUserDetails = (user: User) => {
     setCurrentUser(user);
+    getTestsInfoByUserId(user._id);
     setIsUserDetailsOpen(true);
   };
 
@@ -133,6 +175,11 @@ export default function UsersPage() {
           accessToken,
         })
       ).unwrap();
+      if (currentUser.status === "active") {
+        toast.success("User blocked successfully");
+      } else {
+        toast.success("User unblocked successfully");
+      }
       setIsBlockDialogOpen(false);
       await getUsers();
     } catch (error) {
@@ -324,20 +371,57 @@ export default function UsersPage() {
               </div>
 
               <div className="pt-4 border-t">
-                <h4 className="text-sm font-semibold mb-2">Recent Activity</h4>
-                <div className="space-y-2">
-                  <p className="text-sm">
-                    Completed "Mathematics Test" on{" "}
-                    {new Date().toLocaleDateString()}
-                  </p>
-                  <p className="text-sm">
-                    Created "Science Quiz" on{" "}
-                    {new Date(Date.now() - 86400000).toLocaleDateString()}
-                  </p>
-                  <p className="text-sm">
-                    Updated profile on{" "}
-                    {new Date(Date.now() - 172800000).toLocaleDateString()}
-                  </p>
+                <h4 className="text-sm font-semibold mb-2 text-center">Recent Activity</h4>
+                <div className=" max-h-[20vh] overflow-y-auto">
+                  {testsListing.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No recent activity found.
+                    </p>
+                  ) : (
+                    testsListing.map((test) => (
+                      <div
+                        key={test._id}
+                        className="space-y-1 border-b pb-2 mb-2"
+                      >
+                        <p className="text-sm font-medium">
+                          {test.isCompleted ? "Completed" : "Pending"}{" "}
+                          <span className="font-semibold">{test.testName}</span>{" "}
+                          on {convertToDateFormat(test.createdAt)} at{" "}
+                          {convertToTimeFormat(test.createdAt)}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Subject:{" "}
+                          <span className="font-medium">
+                            {test.subjectName}
+                          </span>{" "}
+                          | Class:{" "}
+                          <span className="font-medium">{test.className}</span>
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Difficulty:{" "}
+                          <span className="capitalize">
+                            {test.difficultyLevel}
+                          </span>{" "}
+                          | Marks:{" "}
+                          <span className="font-medium">
+                            {test.marksObtained}/{test.totalMarks}
+                          </span>
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Questions: {test.totalQuestions} | Status:{" "}
+                          <span
+                            className={
+                              test.isCompleted
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }
+                          >
+                            {test.isCompleted ? "Completed" : "Pending"}
+                          </span>
+                        </p>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

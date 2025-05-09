@@ -34,9 +34,15 @@ export const updateUserStatus = createAsyncThunk(
 )
 
 const initialState = {
-  users: [] as any[],
-  loading: false,
-  error: null as string | null,
+  getUsers: {
+    users: [],
+    loading: false,
+    error: null as string | null,
+  },
+  updateStatus: {
+    loading: false,
+    error: null as string | null
+  }
 }
 
 export const userSlice = createSlice({
@@ -46,27 +52,27 @@ export const userSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchUsers.pending, (state) => {
-        state.loading = true
-        state.error = null
+        state.getUsers.loading = true
+        state.getUsers.error = null
       })
       .addCase(fetchUsers.fulfilled, (state, action) => {
-        state.loading = false
-        state.users = action.payload
+        state.getUsers.loading = false
+        state.getUsers.users = action.payload
       })
       .addCase(fetchUsers.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.error.message ?? 'Failed to fetch users'
+        state.getUsers.loading = false
+        state.getUsers.error = action.error.message ?? 'Failed to fetch users'
       })
       .addCase(updateUserStatus.pending, (state) => {
-        state.loading = true
-        state.error = null
+        state.updateStatus.loading = true
+        state.updateStatus.error = null
       })
       .addCase(updateUserStatus.fulfilled, (state) => {
-        state.loading = false
+        state.updateStatus.loading = false
       })
       .addCase(updateUserStatus.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.error.message ?? 'Failed to update user status'
+        state.updateStatus.loading = false
+        state.updateStatus.error = action.error.message ?? 'Failed to update user status'
       })
   },
 })

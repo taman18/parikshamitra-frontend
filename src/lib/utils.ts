@@ -12,3 +12,10 @@ export const convertToDateFormat = (date: string) => {
     day: "numeric",
   })
 }
+
+export const convertToTimeFormat = (date: string) => {
+  return new Date(date).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "numeric",
+  })
+}
