@@ -20,8 +20,6 @@ export const addSubject = createAsyncThunk(
     accessToken: string;
     body: SubjectInterface;
   }) => {
-    console.log("BODY-------", body);
-    console.log("access token-------", accessToken);
 
     const addSubjectApiResponse = await fetch(
       `${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/subject/add-subject`,
@@ -115,7 +113,11 @@ export const getSubjects = createAsyncThunk(
 export const filterSubjects = createAsyncThunk(
   "filterSubjects",
   async({accessToken,classId,limit,page}:{accessToken:string,classId:string,page:number,limit:number})=>{
-    const filteredSubjectApiResponse = await fetch(`${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/subject/filter-subject?classId=${classId}&page=${page}&limit=${limit}`,
+    const endUrl = new URLSearchParams();
+    if(classId) endUrl.append("classId",classId)
+    endUrl.append("page",String(page))
+    endUrl.append("limit",String(limit))
+    const filteredSubjectApiResponse = await fetch(`${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/subject/filter-subject?${endUrl}`,
       {
         method:"GET",
         headers:{

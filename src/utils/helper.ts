@@ -39,8 +39,11 @@ export const filteredSubjects = async (
     limit:number
   ) => {
     try {
-      console.log("-----------")
-      await dispatch(getQuestions({ accessToken ,classId,subjectId,difficultyLevel,page,limit}));
+      let difficulty="";
+      if(difficultyLevel.toLowerCase().trim() === "easy" || "medium" || "hard"){
+        difficulty = difficultyLevel
+      }
+      await dispatch(getQuestions({ accessToken ,classId,subjectId,difficultyLevel:difficulty,page,limit}));
     } catch (err) {
       console.error("Error fetching classes:", err);
     }

@@ -27,13 +27,9 @@ export default function AddQuestionsPage() {
   const classes = useAppSelector((state: RootState) => state.class.data);
   const subjects = useAppSelector((state: RootState) => state.subject.data);
   const questionsList = useAppSelector((state: RootState) => state.question.data);
-  console.log("QuestionList",questionsList)
   const difficulties = ["Easy", "Medium", "Hard"]
   const { data: session } = useSession();
   const dispatch = useAppDispatch();
-  console.log("Classes",classes);
-  console.log("Subjects",subjects);
-  console.log("selectedSubject",selectedSubject)
     useEffect(()=>{
       if (session?.user?.accessToken) {
         if(selectedClass){
@@ -47,9 +43,6 @@ export default function AddQuestionsPage() {
     newOptions[index] = value
     setOptions(newOptions)
   }
-  console.log("Question",question)
-  console.log("options",options)
-  console.log("correctAnswer",correctAnswer)
 
   const handleAddQuestion = async() => {
     // Validate form

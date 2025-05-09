@@ -49,8 +49,7 @@ export default function ClassesPage() {
 
   const handleEditClass = async() => {
     if (!currentClass || !category || !className.trim()) return
-    const editedClass =await dispatch(editClass({accessToken:session?.data?.user?.accessToken,classId:currentClass.classId,body:{className:className,category:category}}))
-    console.log("editclass",editedClass)
+    await dispatch(editClass({accessToken:session?.data?.user?.accessToken,classId:currentClass.classId,body:{className:className,category:category}}))
     setIsEditDialogOpen(false)
     setCurrentClass(null)
     setClassName("")
