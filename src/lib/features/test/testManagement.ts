@@ -96,7 +96,6 @@ export const testSlice = createSlice({
         state.getTestsByUserId.error = null;
       })
       .addCase(getTestsByUserId.fulfilled, (state, action) => {
-        console.log("action.payload", action.payload);
         state.getTestsByUserId.loading = false;
         const { tests } = action.payload;
         state.getTestsByUserId.testsListing = tests;

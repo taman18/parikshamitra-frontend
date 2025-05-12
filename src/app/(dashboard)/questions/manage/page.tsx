@@ -90,13 +90,11 @@ export default function ManageQuestionsPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
   const [currentQuestion, setCurrentQuestion] = useState<QuestionInterface|null>(null);
-  // const [editedQuestionDetail,setEditedQuestionDetail] = useState<QuestionInterface>(null);
   const { data: session } = useSession();
   const dispatch = useAppDispatch();
   const questions = useAppSelector((state) => state.question.data);
   const classes = useAppSelector((state) => state.class.data);
   const subjects = useAppSelector((state) => state.subject.data);
-  console.log(questions);
   useEffect(() => {
     if (session?.user?.accessToken) {
       fetchQuestions(
@@ -134,16 +132,6 @@ export default function ManageQuestionsPage() {
     setQuestionManagementFilters(filterOptions)
   },[filterOptions])
   const difficulties = ["Easy", "Medium", "Hard"];
-
-  // const filteredQuestions = questions.filter((question) => {
-  //   const matchesSearch = searchQuery ? question.question.toLowerCase().includes(searchQuery.toLowerCase()) : true
-  //   const matchesClass = selectedClass ? question.class === selectedClass : true
-  //   const matchesSubject = selectedSubject ? question.subject === selectedSubject : true
-  //   const matchesDifficulty = selectedDifficulty ? question.difficulty === selectedDifficulty : true
-
-  //   return matchesSearch && matchesClass && matchesSubject && matchesDifficulty
-  // })
-  console.log("mmmmmmmmmmmmmmmm",questions)
   const openEditDialog = (question: QuestionInterface) => {
     setCurrentQuestion(question)
     setIsEditDialogOpen(true)

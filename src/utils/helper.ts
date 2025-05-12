@@ -73,7 +73,6 @@ export const filteredSubjects = async (
     accessToken: string,
     body:QuestionInterface
 ) => {
-  console.log("....",body)
     try {
       await dispatch(
         editQuestion({ accessToken ,body})
