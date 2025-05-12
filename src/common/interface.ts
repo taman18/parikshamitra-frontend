@@ -78,7 +78,7 @@ export interface QuestionInterface {
   className?: string;
   difficultyLevel: string;
   question: string;
-  options: string[];
+  options?: string[];
   correctAnswer: string;
   totalQuestionsByClassAndSubject?:number;
   createdAt: string;

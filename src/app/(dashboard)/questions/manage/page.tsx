@@ -41,6 +41,8 @@ import { Edit, Trash2, MoreHorizontal, Search } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useSession } from "next-auth/react";
 import {
+  deletedQuestion,
+  editedQuestion,
   fetchQuestions,
   fetchSubjects,
   filteredSubjects,
@@ -58,6 +60,20 @@ interface Question {
   class: string;
   difficulty: string;
 }
+const currentQuestionInitialState = {
+  questionId : '',
+  subjectId : '',
+  subjectName : '',
+  classId : '',
+  className : '',
+  difficultyLevel : '',
+  question : '',
+  options : [],
+  correctAnswer : '',
+  totalQuestionsByClassAndSubject :  0,
+  createdAt : '',
+  updatedAt : '',
+}
 
 export default function ManageQuestionsPage() {
   //   const { toast } = useToast()
@@ -73,15 +89,8 @@ export default function ManageQuestionsPage() {
   const [filterOptions,setFilterOptions] = useState<QuestionFilterStateInterface>(QuestionFilterInitialState);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
-  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
-  const [editedQuestion, setEditedQuestion] = useState<string>("");
-  const [editedOptions, setEditedOptions] = useState<string[]>([
-    "",
-    "",
-    "",
-    "",
-  ]);
-  const [editedCorrectAnswer, setEditedCorrectAnswer] = useState<string>("");
+  const [currentQuestion, setCurrentQuestion] = useState<QuestionInterface|null>(null);
+  // const [editedQuestionDetail,setEditedQuestionDetail] = useState<QuestionInterface>(null);
   const { data: session } = useSession();
   const dispatch = useAppDispatch();
   const questions = useAppSelector((state) => state.question.data);
@@ -96,6 +105,7 @@ export default function ManageQuestionsPage() {
         classId,
         subjectId,
         difficultyLevel,
+        searchQuestion,
         1,
         30
       );
@@ -106,8 +116,8 @@ export default function ManageQuestionsPage() {
     classId,
         subjectId,
         difficultyLevel,
+        searchQuestion,
   ]);
-
   useEffect(() => {
     if (session?.user?.accessToken) {
       filteredSubjects(
@@ -133,57 +143,34 @@ export default function ManageQuestionsPage() {
 
   //   return matchesSearch && matchesClass && matchesSubject && matchesDifficulty
   // })
-
+  console.log("mmmmmmmmmmmmmmmm",questions)
   const openEditDialog = (question: QuestionInterface) => {
-    // setCurrentQuestion(question)
-    // setEditedQuestion(question.question)
-    // setEditedOptions([...question.options])
-    // setEditedCorrectAnswer(question.correctAnswer)
-    // setIsEditDialogOpen(true)
+    setCurrentQuestion(question)
+    setIsEditDialogOpen(true)
   };
 
-  const handleEditQuestion = () => {
-    // if (!currentQuestion) return
-    // const updatedQuestions = questions.map((q) =>
-    //   q.id === currentQuestion.id
-    //     ? {
-    //         ...q,
-    //         question: editedQuestion,
-    //         options: [...editedOptions],
-    //         correctAnswer: editedCorrectAnswer,
-    //       }
-    //     : q,
-    // )
-    // setIsEditDialogOpen(false)
-    // toast({
-    //   title: "Success",
-    //   description: "Question updated successfully",
-    // })
+  const handleEditQuestion = async() => {
+    if (!currentQuestion) return
+    await editedQuestion(dispatch,session?.user?.accessToken,currentQuestion)
+    setIsEditDialogOpen(false)
   };
 
   const openDeleteDialog = (question: QuestionInterface) => {
-    // setCurrentQuestion(question?.question)
-    // setIsDeleteDialogOpen(true)
+    setCurrentQuestion(question)
+    setIsDeleteDialogOpen(true)
   };
 
-  const handleDeleteQuestion = () => {
-    // if (!currentQuestion) return
-    // const updatedQuestions = questions.filter((q) => q.id !== currentQuestion.id)
-    // setIsDeleteDialogOpen(false)
-    // toast({
-    //   title: "Success",
-    //   description: "Question deleted successfully",
-    // })
+  const handleDeleteQuestion = async() => {
+    if (!currentQuestion) return
+    const body = {questionId:currentQuestion?.questionId,subjectId:currentQuestion?.subjectId}
+    await deletedQuestion(dispatch,session?.user?.accessToken,body)
+    setCurrentQuestion(null)
   };
 
-  const handleEditOptionChange = (index: number, value: string) => {
-    // const newOptions = [...editedOptions]
-    // newOptions[index] = value
-    // setEditedOptions(newOptions)
-  };
   const handleSearchQuery = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchValue = e.target.value;
     if (filterOptions) {
+      console.log("searchValue",searchValue)
       setFilterOptions({
         ...filterOptions,
         searchQuestion: searchValue,
@@ -196,6 +183,7 @@ export default function ManageQuestionsPage() {
       setFilterOptions({
         ...QuestionFilterInitialState,
         classId: normalizedSelectedClass,
+        searchQuestion:filterOptions?.searchQuestion,
       });
     }
   };
@@ -216,6 +204,33 @@ export default function ManageQuestionsPage() {
         difficultyLevel: normalizedDifficultyLevel,
       });
     }
+  };
+
+  const setEditQuesiton = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const editedQuestion = e.target.value;
+    if(!currentQuestion) return 
+    setCurrentQuestion({
+      ...currentQuestion,
+      question: editedQuestion,
+    });
+  };
+  const setEditCorrectAnswer = (value:string) => {
+    const editedCorrectAnswer = value;
+    if(!currentQuestion) return 
+    setCurrentQuestion({
+      ...currentQuestion,
+      correctAnswer: editedCorrectAnswer,
+    });
+  };
+  console.log("currentQuestion",currentQuestion);
+  const setEditOptions = (index: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const updatedOptions = [...(currentQuestion?.options ?? [])];
+    updatedOptions[index] = e.target.value;
+    if(!currentQuestion) return 
+    setCurrentQuestion({
+      ...currentQuestion,
+      options: updatedOptions,
+    });
   };
   return (
       <div className="p-6 space-y-6">
@@ -377,37 +392,36 @@ export default function ManageQuestionsPage() {
                 <Label htmlFor="edit-question">Question</Label>
                 <Textarea
                   id="edit-question"
-                  value={editedQuestion}
-                  onChange={(e) => setEditedQuestion(e.target.value)}
+                  value={currentQuestion?.question}
+                  onChange={setEditQuesiton}
                   rows={3}
                 />
               </div>
 
               <div className="space-y-4">
-                <Label>Options</Label>
-                {editedOptions.map((option, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <div className="w-8 h-8 flex items-center justify-center bg-muted rounded-md">
-                      {String.fromCharCode(65 + index)}
-                    </div>
-                    <Input
-                      value={option}
-                      onChange={(e) =>
-                        handleEditOptionChange(index, e.target.value)
-                      }
-                    />
+              <Label>Options</Label>
+              {currentQuestion?.options?.map((option, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div className="w-8 h-8 flex items-center justify-center bg-muted rounded-md">
+                    {String.fromCharCode(65 + index)}
                   </div>
-                ))}
-              </div>
+                  <Input
+                    placeholder={`Option ${String.fromCharCode(65 + index)}`}
+                    value={option}
+                    onChange={setEditOptions(index)}
+                  />
+                </div>
+              ))}
+            </div>
 
               <div>
                 <Label>Correct Answer</Label>
                 <RadioGroup
-                  value={editedCorrectAnswer}
-                  onValueChange={setEditedCorrectAnswer}
+                  value={currentQuestion?.correctAnswer}
+                  onValueChange={setEditCorrectAnswer}
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                    {["A", "B", "C", "D"].map((option) => (
+                    {["A","B","C","D"].map((option) => (
                       <div key={option} className="flex items-center space-x-2">
                         <RadioGroupItem
                           value={option}
