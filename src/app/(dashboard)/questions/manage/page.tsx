@@ -49,6 +49,8 @@ import {
 } from "@/utils/helper";
 import { QuestionFilterStateInterface, QuestionInterface } from "@/common/interface";
 import { QuestionFilterInitialState, QuestionManagementFilterProvider, useQuestionManagementFilterContext } from "@/contextApi/questionFilterContext";
+import { Pagination } from "@/components/ui/pagination";
+import { PaginationComponent } from "@/components/common/pagination";
 // import { useToast } from "@/components/ui/use-toast"
 
 interface Question {
@@ -86,15 +88,30 @@ export default function ManageQuestionsPage() {
   page,
   limit,
   } = questionManagementFilters;
+
+    // Add state for pagination
+    const [totalPages, setTotalPages] = useState(1);
+    const [currentPage, setCurrentPage] = useState(page || 1);
+    const itemsPerPage = limit || 10;
+
   const [filterOptions,setFilterOptions] = useState<QuestionFilterStateInterface>(QuestionFilterInitialState);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
   const [currentQuestion, setCurrentQuestion] = useState<QuestionInterface|null>(null);
+  const questionsTotal = useAppSelector((state) => state.question.totalQuestions || 0); // Add this line to get total questions count
   const { data: session } = useSession();
   const dispatch = useAppDispatch();
   const questions = useAppSelector((state) => state.question.data);
   const classes = useAppSelector((state) => state.class.data);
   const subjects = useAppSelector((state) => state.subject.data);
+
+    // Calculate total pages
+    useEffect(() => {
+      if (questionsTotal) {
+        setTotalPages(Math.ceil(questionsTotal / itemsPerPage));
+      }
+    }, [questionsTotal, itemsPerPage]);
+
   useEffect(() => {
     if (session?.user?.accessToken) {
       fetchQuestions(
@@ -104,8 +121,8 @@ export default function ManageQuestionsPage() {
         subjectId,
         difficultyLevel,
         searchQuestion,
-        1,
-        30
+        currentPage, // Use currentPage here
+        itemsPerPage  // Use itemsPerPage here
       );
     }
   }, [
@@ -115,6 +132,8 @@ export default function ManageQuestionsPage() {
         subjectId,
         difficultyLevel,
         searchQuestion,
+        currentPage, // Add currentPage as dependency
+        itemsPerPage  // Add itemsPerPage as dependency
   ]);
   useEffect(() => {
     if (session?.user?.accessToken) {
@@ -128,9 +147,13 @@ export default function ManageQuestionsPage() {
     }
   }, [classId, session?.user?.accessToken, dispatch]);
 
-  useEffect(()=>{
-    setQuestionManagementFilters(filterOptions)
-  },[filterOptions])
+  useEffect(() => {
+    setQuestionManagementFilters({
+      ...filterOptions,
+      page: currentPage, // Add the current page to the filters
+      limit: itemsPerPage // Add the limit to the filters
+    });
+  }, [currentPage, filterOptions, itemsPerPage]);
   const difficulties = ["Easy", "Medium", "Hard"];
   const openEditDialog = (question: QuestionInterface) => {
     setCurrentQuestion(question)
@@ -158,11 +181,12 @@ export default function ManageQuestionsPage() {
   const handleSearchQuery = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchValue = e.target.value;
     if (filterOptions) {
-      console.log("searchValue",searchValue)
       setFilterOptions({
         ...filterOptions,
         searchQuestion: searchValue,
       });
+      setCurrentPage(1);
+
     }
   };
   const setSelectedClass = (selectedClass:string) => {
@@ -173,6 +197,8 @@ export default function ManageQuestionsPage() {
         classId: normalizedSelectedClass,
         searchQuestion:filterOptions?.searchQuestion,
       });
+      setCurrentPage(1);
+
     }
   };
   const setSelectedSubject = (selectedSubject:string) => {
@@ -182,6 +208,8 @@ export default function ManageQuestionsPage() {
         ...filterOptions,
         subjectId: normalizedSelectedSubject,
       });
+      setCurrentPage(1);
+
     }
   };
   const setSelectedDifficulty = (difficultyLevel:string) => {
@@ -191,9 +219,14 @@ export default function ManageQuestionsPage() {
         ...filterOptions,
         difficultyLevel: normalizedDifficultyLevel,
       });
+      setCurrentPage(1);
+
     }
   };
-
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
   const setEditQuesiton = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const editedQuestion = e.target.value;
     if(!currentQuestion) return 
@@ -210,7 +243,6 @@ export default function ManageQuestionsPage() {
       correctAnswer: editedCorrectAnswer,
     });
   };
-  console.log("currentQuestion",currentQuestion);
   const setEditOptions = (index: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const updatedOptions = [...(currentQuestion?.options ?? [])];
     updatedOptions[index] = e.target.value;
@@ -363,6 +395,16 @@ export default function ManageQuestionsPage() {
                 </TableBody>
               </Table>
             </div>
+            {/* Pagination Component */}
+          <div className="mt-4">
+            <PaginationComponent
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              siblingCount={1}
+              className="mt-4"
+            />
+          </div>
           </CardContent>
         </Card>
 

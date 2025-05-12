@@ -7,6 +7,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 const initialState: QuestionState = {
   data: [],
+  totalQuestions:0,
   loading: false,
   error: null,
 };
@@ -132,11 +133,12 @@ export const getQuestions = createAsyncThunk(
       }
     );
     const getQuestionsApiJsonResponse = await getQuestionsApiResponse.json();
+    console.log(getQuestionsApiJsonResponse)
     return getQuestionsApiJsonResponse;
   }
 );
 
-export const subjectSlice = createSlice({
+export const QuestionSlice = createSlice({
   name: "Question",
   initialState,
   reducers: {},
@@ -156,6 +158,7 @@ export const subjectSlice = createSlice({
             ...rest,
           },
         ];
+        state.totalQuestions = state.totalQuestions + 1;
       })
       .addCase(addQuestion.rejected, (state, action) => {
         state.error = action.error.message || "Failed to add subject.";
@@ -171,6 +174,7 @@ export const subjectSlice = createSlice({
         state.data = state.data?.filter(
           (que) => action.payload.deletedQuestionId !== que.questionId
         );
+        state.totalQuestions = state.totalQuestions - 1;
       })
       .addCase(deleteQuestion.rejected, (state, action) => {
         state.loading = false;
@@ -206,7 +210,7 @@ export const subjectSlice = createSlice({
       })
       .addCase(getQuestions.fulfilled, (state, action) => {
         state.loading = false;
-        const transformedData: QuestionInterface[] = action?.payload?.data?.map(
+        const transformedData: QuestionInterface[] = action?.payload?.data?.result?.map(
           (que: ApiResponseQuestionInterface) => {
             const { _id,subjectInfo,classInfo,classId,subjectId, ...rest } = que;
             return {
@@ -220,6 +224,7 @@ export const subjectSlice = createSlice({
           }
         );
         state.data = transformedData;
+        state.totalQuestions = action?.payload?.data?.totalRecords
       })
       .addCase(getQuestions.rejected, (state, action) => {
         state.loading = false;
@@ -251,4 +256,4 @@ export const subjectSlice = createSlice({
   },
 });
 
-export default subjectSlice.reducer;
+export default QuestionSlice.reducer;

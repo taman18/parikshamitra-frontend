@@ -10,6 +10,7 @@ export interface SubjectInterface {
 // SubjectState — Redux state structure
 export interface SubjectState {
   data: SubjectInterface[];
+  totalSubjects:number;
   loading: boolean;
   error: string | null;
 }
@@ -87,6 +88,7 @@ export interface QuestionInterface {
 
 export interface QuestionState {
   data: QuestionInterface[];
+  totalQuestions:number;
   loading: boolean;
   error: string | null;
 }
