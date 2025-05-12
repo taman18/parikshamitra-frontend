@@ -33,19 +33,25 @@ import {
   addSubject,
   deleteSubject,
   editSubject,
-  filterSubjects,
-  getSubjects,
 } from "@/lib/features/subjectManagement";
 import { AppDispatch, RootState } from "@/lib/store";
 import { useSession } from "next-auth/react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { SubjectInterface } from "@/common/interface";
 import { fetchSubjects, filteredSubjects } from "@/utils/helper";
+import { PaginationComponent } from "@/components/common/pagination";
 // import { useToast } from "@/components/ui/use-toast"
 
 export default function SubjectsPage() {
   //   const { toast } = useToast()
+  // Add state for pagination
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const subjectList = useAppSelector((state: RootState) => state.subject.data);
+  const totalSubjects = useAppSelector(
+    (state: RootState) => state.subject.totalSubjects
+  );
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [subjectName, setSubjectName] = useState<string>("");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
@@ -58,22 +64,45 @@ export default function SubjectsPage() {
 
   const dispatch = useAppDispatch();
   const { data: session } = useSession();
+  // Calculate total pages
+  useEffect(() => {
+    if (totalSubjects) {
+      setTotalPages(Math.ceil(totalSubjects / itemsPerPage));
+    }
+  }, [totalSubjects, itemsPerPage]);
   useEffect(() => {
     if (session?.user?.accessToken) {
-      fetchSubjects(dispatch,session?.user?.accessToken);
+      filteredSubjects(
+        dispatch,
+        session?.user?.accessToken,
+        selectedClassToFilter,
+        currentPage,
+        itemsPerPage
+      );
     }
-  }, [dispatch, session?.user?.accessToken]);
+  }, [dispatch, session?.user?.accessToken, currentPage]);
 
-  useEffect(()=>{
+  useEffect(() => {
     if (session?.user?.accessToken) {
-      if(selectedClassToFilter){
-        filteredSubjects(dispatch,session?.user?.accessToken,selectedClassToFilter,1,10);
-      }
-      else{
-        fetchSubjects(dispatch,session?.user?.accessToken);
+      if (selectedClassToFilter) {
+        filteredSubjects(
+          dispatch,
+          session?.user?.accessToken,
+          selectedClassToFilter,
+          currentPage,
+          itemsPerPage
+        );
+      } else {
+        filteredSubjects(
+          dispatch,
+          session?.user?.accessToken,
+          selectedClassToFilter,
+          currentPage,
+          itemsPerPage
+        );
       }
     }
-  },[selectedClassToFilter])
+  }, [selectedClassToFilter, currentPage]);
   const classes = useSelector((state: RootState) => state.class.data);
   const handleAddSubject = async () => {
     if (!selectedClass || !subjectName.trim()) {
@@ -141,7 +170,14 @@ export default function SubjectsPage() {
     //   description: "Subject deleted successfully",
     // })
   };
-
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+  const setSelectedClassForFiltering = (selectedClass: string) => {
+    setSelectedClassToFilter(selectedClass === "all" ? "" : selectedClass);
+    setCurrentPage(1)
+  };
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">Subjects</h1>
@@ -185,16 +221,14 @@ export default function SubjectsPage() {
           <div className="mb-4">
             <Select
               value={selectedClassToFilter || "all"}
-              onValueChange={(val) =>
-                setSelectedClassToFilter(val === "all" ? "" : val)
-              }
+              onValueChange={setSelectedClassForFiltering}
             >
               <SelectTrigger className="w-full md:w-[200px]">
                 <SelectValue placeholder="Filter by Class" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Classes</SelectItem>
-                {classes.map((cls) => (
+                {classes?.map((cls) => (
                   <SelectItem key={cls?.classId} value={cls?.classId || ""}>
                     {cls?.className}
                   </SelectItem>
@@ -214,34 +248,43 @@ export default function SubjectsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {subjectList
-                  .map((subject) => (
-                    <TableRow key={subject?.subjectId}>
-                      <TableCell>{subject?.subjectId}</TableCell>
-                      <TableCell>{subject?.subjectName}</TableCell>
-                      <TableCell>{subject?.className}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => openEditDialog(subject)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => openDeleteDialog(subject)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                {subjectList?.map((subject) => (
+                  <TableRow key={subject?.subjectId}>
+                    <TableCell>{subject?.subjectId}</TableCell>
+                    <TableCell>{subject?.subjectName}</TableCell>
+                    <TableCell>{subject?.className}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => openEditDialog(subject)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => openDeleteDialog(subject)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
+          </div>
+          {/* Pagination Component */}
+          <div className="mt-4">
+            <PaginationComponent
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              siblingCount={1}
+              className="mt-4"
+            />
           </div>
         </CardContent>
       </Card>
