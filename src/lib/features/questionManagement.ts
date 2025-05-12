@@ -76,7 +76,6 @@ export const addQuestion = createAsyncThunk(
       accessToken: string;
       body: QuestionInterface;
     }) => {
-      console.log("--------",body)
       const editQuestionApiResponse = await fetch(
         `${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/question/edit-question`,
         {
@@ -89,7 +88,6 @@ export const addQuestion = createAsyncThunk(
         }
       );
       const editQuestionApiJsonResponse = await editQuestionApiResponse.json();
-      console.log("editQuestionApiJsonResponse",editQuestionApiJsonResponse?.data)
       return {
         editQuestionApiJsonResponse: editQuestionApiJsonResponse?.data,
         editQuestionId: body?.questionId,
@@ -137,24 +135,6 @@ export const getQuestions = createAsyncThunk(
     return getQuestionsApiJsonResponse;
   }
 );
-
-//   export const filterSubjects = createAsyncThunk(
-//     "filterSubjects",
-//     async({accessToken,classId,limit,page}:{accessToken:string,classId:string,page:number,limit:number})=>{
-//       const filteredSubjectApiResponse = await fetch(`${process.env.NEXT_PUBLIC_DEV_BASE_URL}/admin/subject/filter-subject?classId=${classId}&&page=${page}&&limit=${limit}`,
-//         {
-//           method:"GET",
-//           headers:{
-//             "Content-Type":"application/json",
-//             authorization : `Bearer ${accessToken}`
-//           },
-//         }
-//       )
-//       const filteredSubjectApiJsonResponse = await filteredSubjectApiResponse.json();
-//       console.log(filteredSubjectApiJsonResponse);
-//       return filteredSubjectApiJsonResponse
-//     }
-//   )
 
 export const subjectSlice = createSlice({
   name: "Question",
@@ -204,19 +184,14 @@ export const subjectSlice = createSlice({
       .addCase(editQuestion.fulfilled, (state, action) => {
         state.loading = false;
         const updatedData = action.payload?.editQuestionApiJsonResponse;
-        console.log("Que managemnet updated data ",updatedData)
-        console.log("already data ",state?.data)
         state.data = state.data?.map((que) => {
           if (action.payload?.editQuestionId === que?.questionId) {
-            console.log("equal",action.payload.editQuestionId===que.questionId)
             const { _id, ...rest } = updatedData;
-            console.log("_id : ",_id,"....rest")
             return {
               questionId: _id,
               ...rest,
             };
           }
-          console.log("ccccccccc",que)
           return que;
         });
       })

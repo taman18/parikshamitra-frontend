@@ -127,7 +127,6 @@ export const filterSubjects = createAsyncThunk(
       }
     )
     const filteredSubjectApiJsonResponse = await filteredSubjectApiResponse.json();
-    console.log(filteredSubjectApiJsonResponse);
     return filteredSubjectApiJsonResponse
   }
 )
@@ -182,7 +181,6 @@ export const subjectSlice = createSlice({
         state.data = state.data.map((sub) => {
           if (action.payload.editSubjectId === sub.subjectId) {
             const { _id, ...rest } = updatedData;
-            console.log("_id : ",_id,"....rest")
             return {
               subjectId: _id,
               ...rest,
