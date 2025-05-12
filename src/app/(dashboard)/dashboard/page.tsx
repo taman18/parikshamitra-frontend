@@ -86,7 +86,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-6 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -197,7 +197,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-1">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-1">
         <Card>
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold mb-4">Recent Tests</h3>
