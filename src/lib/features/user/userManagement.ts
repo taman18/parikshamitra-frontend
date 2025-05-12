@@ -3,8 +3,8 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 
 export const fetchUsers = createAsyncThunk(
   'users/fetchByIdStatus',
-  async ({search, accessToken}: {search: string, accessToken: string}) => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_DEV_BASE_URL}/${API_URIS.users.getAllUsers}?search=${search}`,
+  async ({search, accessToken, limit = 10, pageNo = 1}: {search: string, accessToken: string, limit: number, pageNo: number}) => {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_DEV_BASE_URL}/${API_URIS.users.getAllUsers}?search=${search}&limit=${limit}&pageNo=${pageNo}`,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -12,8 +12,8 @@ export const fetchUsers = createAsyncThunk(
         },
       }
     );
-    const data = await response.json()
-    return data
+    const data = await response.json();
+    return data.response.data
   }
 )
 
@@ -33,11 +33,40 @@ export const updateUserStatus = createAsyncThunk(
   }
 )
 
-const initialState = {
+interface User {
+  _id: string;
+  userName: string;
+  email: string;
+  status: string;
+  testTaken: number;
+  averageScore: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+
+interface UserInfo {
+  getUsers: {
+    users: User[]
+    loading: boolean
+    error: string | null
+    totalUsers: number
+    totalPages: number
+  }
+  updateStatus: {
+    loading: boolean
+    error: string | null
+  }
+}
+
+const initialState: UserInfo = {
   getUsers: {
     users: [],
     loading: false,
     error: null as string | null,
+    totalUsers: 0,
+    totalPages: 0
   },
   updateStatus: {
     loading: false,
@@ -57,7 +86,7 @@ export const userSlice = createSlice({
       })
       .addCase(fetchUsers.fulfilled, (state, action) => {
         state.getUsers.loading = false
-        state.getUsers.users = action.payload
+        state.getUsers = action.payload
       })
       .addCase(fetchUsers.rejected, (state, action) => {
         state.getUsers.loading = false

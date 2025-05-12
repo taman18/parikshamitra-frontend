@@ -34,6 +34,10 @@ import { RootState } from "@/lib/store";
 import { toast } from "react-toastify";
 import { Test } from "@/common/interface";
 import { convertToDateFormat } from "@/lib/utils";
+import UsePagination from "@/hooks/usePagination";
+import { PaginationComponent } from "@/components/common/pagination";
+
+const LIMIT = 10;
 
 export default function TestsOverviewPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -42,24 +46,26 @@ export default function TestsOverviewPage() {
   const [isShareDialogOpen, setIsShareDialogOpen] = useState<boolean>(false);
   const [currentTest, setCurrentTest] = useState<Test | null>(null);
   const dispatch = useAppDispatch();
-  const hasFetchedRef = useRef(false);
   const accessTokenSelector = useAppSelector(
     (state: RootState) => state.auth.accessToken
   );
   const testDetails = useAppSelector((state: RootState) => state.test.getTests);
+  const totalPages = testDetails.totalPages ?? 1;
   const tests = testDetails.testsListing;
   const { data: session, status } = useSession();
   const isFirstSearchRef = useRef(true);
 
   const finalAccessToken =
     accessTokenSelector ?? session?.user?.accessToken ?? "";
-    
+  const { currentPage, handlePageChange } = UsePagination();
   const fetchUserTestsDetails = async () => {
     try {
       await dispatch(
         fetchUserTests({
           accessToken: accessTokenSelector ?? session?.user?.accessToken ?? "",
           search: searchQuery.trim(),
+          limit: LIMIT,
+          pageNo: currentPage,
         })
       ).unwrap();
     } catch (error) {
@@ -70,13 +76,11 @@ export default function TestsOverviewPage() {
   useEffect(() => {
     if (
       status === "authenticated" &&
-      finalAccessToken &&
-      !hasFetchedRef.current
+      finalAccessToken
     ) {
-      hasFetchedRef.current = true;
       fetchUserTestsDetails();
     }
-  }, [finalAccessToken, status]);
+  }, [finalAccessToken, status, currentPage]);
 
   useEffect(() => {
     if (isFirstSearchRef.current) {
@@ -210,6 +214,15 @@ export default function TestsOverviewPage() {
                 )}
               </TableBody>
             </Table>
+          </div>
+          <div className="mt-4">
+            <PaginationComponent
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              siblingCount={1}
+              className="mt-4"
+            />
           </div>
         </CardContent>
       </Card>

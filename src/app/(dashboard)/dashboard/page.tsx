@@ -18,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { BarChart, LineChart } from "@/app/components/ui/chart";
 
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
@@ -25,14 +26,24 @@ export default function DashboardPage() {
   const accessTokenSelector = useAppSelector(
     (state: RootState) => state.auth.accessToken
   );
+  const barChartData = [
+    { label: "Easy", value: 75 },
+    { label: "Medium", value: 60 },
+    { label: "Hard", value: 45 },
+  ];
   const accessToken = accessTokenSelector ?? session?.user?.accessToken;
   const tiles = useAppSelector((state: RootState) => state.dashboard.tiles);
-  const recentTests = useAppSelector(
-    (state: RootState) => state.test.getTests
-  );
+  const recentTests = useAppSelector((state: RootState) => state.test.getTests);
   const { testsListing } = recentTests;
   const [range, setRange] = useState("day");
 
+  const data = [
+    { name: 'Jan', value: 30 },
+    { name: 'Feb', value: 45 },
+    { name: 'Mar', value: 70 },
+    { name: 'Apr', value: 85 },
+    { name: 'May', value: 50 },
+  ];
   const fetchTilesData = async () => {
     await dispatch(fetchTilesInfo({ accessToken, range }));
   };
@@ -75,7 +86,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-6 lg:grid-cols-3">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -158,14 +169,11 @@ export default function DashboardPage() {
               Average Score by Difficulty
             </h3>
             <div className="h-[300px]">
-              {/* <BarChart
+              <BarChart
                 data={barChartData}
-                index="name"
-                categories={["value"]}
-                colors={["#6366f1"]}
-                valueFormatter={(value) => `${value}%`}
-                yAxisWidth={40}
-              /> */}
+                height={300}
+                barColor="#6366f1"
+              />
             </div>
           </CardContent>
         </Card>
@@ -176,14 +184,14 @@ export default function DashboardPage() {
               Test Completion Trend
             </h3>
             <div className="h-[300px]">
-              {/* <LineChart
-                data={lineChartData}
+              <LineChart
+                data={data}
                 index="name"
                 categories={["value"]}
                 colors={["#10b981"]}
                 valueFormatter={(value) => `${value}%`}
                 yAxisWidth={40}
-              /> */}
+              />
             </div>
           </CardContent>
         </Card>
@@ -251,13 +259,15 @@ export default function DashboardPage() {
                     ))
                   ) : (
                     <TableRow>
-                      {recentTests.loading ? (<TableCell colSpan={10} className="h-24 text-center">Loading...</TableCell>)
-                      :
-                      (<TableCell colSpan={10} className="h-24 text-center">
-                        No tests found.
-                      </TableCell>)
-                      }
-                      
+                      {recentTests.loading ? (
+                        <TableCell colSpan={10} className="h-24 text-center">
+                          Loading...
+                        </TableCell>
+                      ) : (
+                        <TableCell colSpan={10} className="h-24 text-center">
+                          No tests found.
+                        </TableCell>
+                      )}
                     </TableRow>
                   )}
                 </TableBody>

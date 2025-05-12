@@ -46,6 +46,8 @@ import { RootState } from "@/lib/store";
 import { getTestsByUserId } from "@/lib/features/test/testManagement";
 import { convertToDateFormat, convertToTimeFormat } from "@/lib/utils";
 import { toast } from "react-toastify";
+import { PaginationComponent } from "@/components/common/pagination";
+import UsePagination from "@/hooks/usePagination";
 
 interface User {
   _id: string;
@@ -81,6 +83,8 @@ export interface Test {
   __v: number;
 }
 
+const LIMIT = 10;
+
 export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isUserDetailsOpen, setIsUserDetailsOpen] = useState<boolean>(false);
@@ -93,13 +97,20 @@ export default function UsersPage() {
   const blockUserIsLoading = useAppSelector(
     (state: RootState) => state.user.updateStatus.loading
   );
-  const testDetails = useAppSelector((state: RootState) => state.test.getTestsByUserId);
+  const usersInfo = useAppSelector(
+    (state: RootState) => state.user.getUsers
+  );
+  const testDetails = useAppSelector(
+    (state: RootState) => state.test.getTestsByUserId
+  );
+
+  const totalPages = usersInfo.totalPages ?? 1;
+  const {currentPage, handlePageChange} = UsePagination();
+  // const [currentPage, setCurrentPage] = useState<number>(1);
   const { testsListing } = testDetails;
-  const [users, setUsers] = useState<User[]>([]);
   const { data: session, status } = useSession();
   const finalAccessToken =
     accessTokenSelector ?? session?.user?.accessToken ?? "";
-  const hasFetchedRef = useRef(false);
   const isFirstSearchRef = useRef(true);
 
   const getStatusButtonLabel = () => {
@@ -114,13 +125,14 @@ export default function UsersPage() {
 
   const getUsers = async () => {
     try {
-      const users = await dispatch(
+      await dispatch(
         fetchUsers({
           search: searchQuery,
           accessToken: finalAccessToken ?? "",
+          limit: LIMIT ?? 10,
+          pageNo: currentPage,
         })
       ).unwrap();
-      setUsers(users.response.data.users);
     } catch (error) {
       console.error(error);
     }
@@ -186,17 +198,14 @@ export default function UsersPage() {
       console.error("Failed to toggle user status:", error);
     }
   };
-
   useEffect(() => {
     if (
       status === "authenticated" &&
-      finalAccessToken &&
-      !hasFetchedRef.current
+      finalAccessToken
     ) {
-      hasFetchedRef.current = true;
       getUsers(); // initial call
     }
-  }, [status, finalAccessToken]);
+  }, [status, finalAccessToken, currentPage]);
 
   useEffect(() => {
     if (isFirstSearchRef.current) {
@@ -249,8 +258,8 @@ export default function UsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users?.length > 0 ? (
-                  users.map((user) => (
+                {usersInfo.users?.length > 0 ? (
+                  usersInfo.users.map((user: User) => (
                     <TableRow key={user._id}>
                       <TableCell>{user._id}</TableCell>
                       <TableCell>{user.userName}</TableCell>
@@ -307,6 +316,15 @@ export default function UsersPage() {
                 )}
               </TableBody>
             </Table>
+          </div>
+          <div className="mt-4">
+            <PaginationComponent
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              siblingCount={1}
+              className="mt-4"
+            />
           </div>
         </CardContent>
       </Card>
@@ -371,7 +389,9 @@ export default function UsersPage() {
               </div>
 
               <div className="pt-4 border-t">
-                <h4 className="text-sm font-semibold mb-2 text-center">Recent Activity</h4>
+                <h4 className="text-sm font-semibold mb-2 text-center">
+                  Recent Activity
+                </h4>
                 <div className=" max-h-[20vh] overflow-y-auto">
                   {testsListing.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
